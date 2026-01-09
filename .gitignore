@@ -5,9 +5,10 @@ node_modules/
 React/dist/
 backend/dist/
 
-# Mobile builds
-mobile/www/
-!mobile/www/index.html
+# Mobile builds (keep base assets, ignore built JS/CSS)
+mobile/www/assets/
+mobile/www/*.js
+mobile/www/*.css
 mobile/android/app/build/
 mobile/android/.gradle/
 mobile/android/build/

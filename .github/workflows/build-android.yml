@@ -52,24 +52,6 @@ jobs:
           rm -rf mobile/www
           cp -r React/dist mobile/www
 
-      - name: Generate app icons for Android
-        run: |
-          cp React/public/icons/icon-72x72.png mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          cp React/public/icons/icon-72x72.png mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-          cp React/public/icons/icon-72x72.png mobile/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
-          cp React/public/icons/icon-96x96.png mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          cp React/public/icons/icon-96x96.png mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
-          cp React/public/icons/icon-96x96.png mobile/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
-          cp React/public/icons/icon-144x144.png mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          cp React/public/icons/icon-144x144.png mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
-          cp React/public/icons/icon-144x144.png mobile/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
-          cp React/public/icons/icon-192x192.png mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          cp React/public/icons/icon-192x192.png mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
-          cp React/public/icons/icon-192x192.png mobile/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
-          cp React/public/icons/favicon-57.png mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp React/public/icons/favicon-57.png mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-          cp React/public/icons/favicon-57.png mobile/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
-
       - name: Install mobile dependencies
         run: |
           cd mobile
