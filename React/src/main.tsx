@@ -1,13 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, HashRouter } from 'react-router-dom';
 import App from './App';
 import './App.css';
 
-// Register Service Worker for offline support
-if ('serviceWorker' in navigator) {
+// Detect if running in Capacitor (mobile app)
+const isCapacitor = !!(window as any).Capacitor;
+
+// Register Service Worker for offline support (only in browser, not in Capacitor)
+if ('serviceWorker' in navigator && !isCapacitor) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
+    navigator.serviceWorker.register('./service-worker.js')
       .then((registration) => {
         console.log('✅ Service Worker registered:', registration.scope);
         
@@ -29,16 +32,19 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Use HashRouter for Capacitor (file:// protocol), BrowserRouter for web
+const Router = isCapacitor ? HashRouter : BrowserRouter;
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter
+    <Router
       future={{
         v7_startTransition: true,
         v7_relativeSplatPath: true,
       }}
     >
       <App />
-    </BrowserRouter>
+    </Router>
   </React.StrictMode>
 );
 
