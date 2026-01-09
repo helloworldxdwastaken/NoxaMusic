@@ -107,7 +107,7 @@ export const ArtistDetail: React.FC = () => {
                   className="artist-image"
                   src={getArtistImageUrl(
                     data.tracks[0]?.artist_image || 
-                    data.albums[0]?.album_cover || 
+                    data.albums[0]?.cover || 
                     data.tracks[0]?.album_cover
                   )}
                   alt={data.artist}
