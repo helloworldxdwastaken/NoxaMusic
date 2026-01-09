@@ -4,27 +4,26 @@ import { BrowserRouter, HashRouter } from 'react-router-dom';
 import App from './App';
 import './App.css';
 
-// Detect if running in Capacitor (mobile app)
-const isCapacitor = !!(window as any).Capacitor;
+// Detect if running in Capacitor/mobile app
+// Check for Capacitor object, file:// protocol, or capacitor:// protocol
+const isCapacitor = !!(window as any).Capacitor || 
+  window.location.protocol === 'file:' || 
+  window.location.protocol === 'capacitor:' ||
+  window.location.hostname === 'localhost' && window.location.port === '';
 
-// Register Service Worker for offline support (only in browser, not in Capacitor)
-if ('serviceWorker' in navigator && !isCapacitor) {
+console.log('🚀 App starting...', {
+  isCapacitor,
+  protocol: window.location.protocol,
+  hostname: window.location.hostname,
+  href: window.location.href
+});
+
+// Register Service Worker for offline support (only in browser with http/https)
+if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
       .then((registration) => {
         console.log('✅ Service Worker registered:', registration.scope);
-        
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          console.log('🔄 Service Worker update found');
-          
-          newWorker?.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('📦 New Service Worker available - refresh to update');
-            }
-          });
-        });
       })
       .catch((error) => {
         console.error('❌ Service Worker registration failed:', error);
@@ -32,19 +31,22 @@ if ('serviceWorker' in navigator && !isCapacitor) {
   });
 }
 
-// Use HashRouter for Capacitor (file:// protocol), BrowserRouter for web
+// Use HashRouter for Capacitor/mobile, BrowserRouter for web
 const Router = isCapacitor ? HashRouter : BrowserRouter;
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Router
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }}
-    >
-      <App />
-    </Router>
-  </React.StrictMode>
-);
+console.log('📍 Using router:', isCapacitor ? 'HashRouter' : 'BrowserRouter');
+
+try {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <Router>
+        <App />
+      </Router>
+    </React.StrictMode>
+  );
+  console.log('✅ React app rendered');
+} catch (error) {
+  console.error('❌ React render error:', error);
+  document.body.innerHTML = `<div style="color:white;padding:20px;">Error: ${error}</div>`;
+}
 
