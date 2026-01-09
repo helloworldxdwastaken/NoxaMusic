@@ -29,14 +29,14 @@ export function getArtworkUrl(path: string | null | undefined): string {
   
   // Already a full URL or data URI
   if (normalizedPath.startsWith('http') || normalizedPath.startsWith('data:')) {
-    // In dev mode, convert full URLs to relative for proxy
-    if (import.meta.env.DEV && normalizedPath.startsWith('https://stream.noxamusic.com')) {
+    // In dev web mode (not Capacitor), convert full URLs to relative for proxy
+    if (import.meta.env.DEV && !isCapacitor && normalizedPath.startsWith('https://stream.noxamusic.com')) {
       return normalizedPath.replace('https://stream.noxamusic.com', '');
     }
     return normalizedPath;
   }
   
-  // Relative path - prepend API base (empty in dev, full URL in prod)
+  // Relative path - prepend API base
   return `${API_BASE}${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
 }
 
@@ -65,15 +65,23 @@ export function getArtistImageUrl(path: string | null | undefined): string {
   // Use local default if no path
   if (!path) return LOCAL_DEFAULT_ARTIST;
   
-  if (path.startsWith('http') || path.startsWith('data:')) {
-    // In dev mode, convert full URLs to relative for proxy
-    if (import.meta.env.DEV && path.startsWith('https://stream.noxamusic.com')) {
-      return path.replace('https://stream.noxamusic.com', '');
-    }
-    return path;
+  // Normalize server filesystem paths to web-accessible paths
+  let normalizedPath = path;
+  if (path.includes('/mnt/UNO/Music_lib/')) {
+    normalizedPath = path.replace('/mnt/UNO/Music_lib/', '/music_lib/');
   }
   
-  return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+  // Already a full URL or data URI
+  if (normalizedPath.startsWith('http') || normalizedPath.startsWith('data:')) {
+    // In dev web mode (not Capacitor), convert full URLs to relative for proxy
+    if (import.meta.env.DEV && !isCapacitor && normalizedPath.startsWith('https://stream.noxamusic.com')) {
+      return normalizedPath.replace('https://stream.noxamusic.com', '');
+    }
+    return normalizedPath;
+  }
+  
+  // Relative path - prepend API base
+  return `${API_BASE}${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
 }
 
 /**
