@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, getApiBase } from './client';
 
 export interface User {
   id: number;
@@ -37,11 +37,23 @@ export async function login(
   username: string,
   password: string
 ): Promise<LoginResponse> {
-  const response = await fetch('/api/auth/login', {
+  const url = `${getApiBase()}/api/auth/login`;
+  console.log('🔐 Login attempt to:', url);
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   });
+  
+  // Check content type before parsing
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    console.error('❌ Login response is not JSON:', contentType);
+    const text = await response.text();
+    console.error('Response body:', text.substring(0, 200));
+    throw new Error('Server returned invalid response. Please try again.');
+  }
   
   const data = await response.json();
   
@@ -88,7 +100,10 @@ export async function signup(
   utmMedium?: string,
   utmCampaign?: string
 ): Promise<SignupResponse> {
-  const response = await fetch('/api/auth/signup', {
+  const url = `${getApiBase()}/api/auth/signup`;
+  console.log('📝 Signup attempt to:', url);
+  
+  const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -101,6 +116,13 @@ export async function signup(
       utmCampaign,
     }),
   });
+  
+  // Check content type before parsing
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    console.error('❌ Signup response is not JSON:', contentType);
+    throw new Error('Server returned invalid response. Please try again.');
+  }
   
   const data = await response.json();
   
