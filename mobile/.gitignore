@@ -1,9 +1,8 @@
 # Dependencies
 node_modules/
 
-# Build outputs
+# Build outputs - www/ is generated from React build
 www/
-!www/index.html
 
 # Android
 android/app/build/

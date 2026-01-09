@@ -37,7 +37,12 @@ jobs:
       - name: Copy web assets to mobile
         run: |
           rm -rf mobile/www
-          cp -r React/dist mobile/www
+          mkdir -p mobile/www
+          cp -r React/dist/* mobile/www/
+          echo "=== Contents of mobile/www ==="
+          ls -la mobile/www/
+          echo "=== index.html first 30 lines ==="
+          head -30 mobile/www/index.html
 
       - name: Install mobile dependencies
         run: |
