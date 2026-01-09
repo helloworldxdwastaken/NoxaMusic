@@ -1,0 +1,24 @@
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.volume-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.volume-btn:hover {
+  color: var(--text-primary);
+}
+
+.volume-control .slider-volume {
+  width: 100px;
+}
+

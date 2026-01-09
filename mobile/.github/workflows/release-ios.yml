@@ -1,0 +1,99 @@
+name: Release iOS
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release-ios:
+    name: Build iOS Release
+    runs-on: macos-15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'mobile/package-lock.json'
+
+      - name: Install React frontend dependencies
+        run: |
+          cd React
+          npm ci
+
+      - name: Build React frontend
+        run: |
+          cd React
+          npm run build
+
+      - name: Copy web assets to mobile
+        run: |
+          rm -rf mobile/www
+          cp -r React/dist mobile/www
+
+      - name: Install mobile dependencies
+        run: |
+          cd mobile
+          npm ci
+
+      - name: Update Capacitor config for production
+        run: |
+          cd mobile
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.noxamusic.app",
+            "appName": "Noxa Music",
+            "webDir": "www",
+            "ios": {
+              "backgroundColor": "#0a0a0a",
+              "contentInset": "automatic"
+            }
+          }
+          EOF
+
+      - name: Sync Capacitor
+        run: |
+          cd mobile
+          npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd mobile/ios/App
+          pod install
+
+      - name: Build iOS Archive
+        run: |
+          cd mobile/ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath $PWD/build/App.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export unsigned IPA
+        run: |
+          cd mobile/ios/App
+          mkdir -p build/Payload
+          cp -r build/App.xcarchive/Products/Applications/App.app build/Payload/
+          cd build
+          zip -r noxa-music-unsigned.ipa Payload
+
+      - name: Upload iOS IPA to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mobile/ios/App/build/noxa-music-unsigned.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

@@ -1,0 +1,84 @@
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.control-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.control-btn.active {
+  color: var(--accent-green);
+}
+
+.control-btn.play-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--text-primary);
+  color: var(--bg-base);
+  border-radius: 50%;
+  font-size: 14px;
+}
+
+.control-btn.play-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+  background: var(--accent-green);
+}
+
+.repeat-one-badge {
+  position: absolute;
+  font-size: 8px;
+  font-weight: 700;
+  bottom: -2px;
+  right: -2px;
+}
+
+/* Sizes */
+.controls-sm {
+  gap: 12px;
+}
+
+.controls-sm .control-btn {
+  font-size: 14px;
+}
+
+.controls-sm .control-btn.play-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+
+.controls-md .control-btn {
+  font-size: 16px;
+}
+
+.controls-lg {
+  gap: 24px;
+}
+
+.controls-lg .control-btn {
+  font-size: 20px;
+}
+
+.controls-lg .control-btn.play-btn {
+  width: 56px;
+  height: 56px;
+  font-size: 20px;
+}
+

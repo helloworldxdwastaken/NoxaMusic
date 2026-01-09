@@ -1,0 +1,43 @@
+Artists Still Missing Images (24 total)
+=========================================
+
+These artists couldn't be found in any music database (TheAudioDB, Discogs, Last.fm, MusicBrainz, Deezer).
+They are mostly very obscure, indie, or regional artists.
+
+To manually add an artist image:
+1. Find an image on Google Images or the artist's website
+2. Save it to: /home/tokyo/Desktop/music_app/backend/artwork_cache/
+3. Name it: artist_[artist_name].jpg (replace special chars with underscore)
+4. Update the database to reference it
+
+Artists by popularity:
+----------------------
+
+1. небо над головой (3 tracks) - Russian indie artist
+2. Raul Paz (3 tracks) - Cuban musician
+3. Moneda Dura (3 tracks) - Cuban group
+4. Второй Ка (2 tracks) - Russian artist
+5. X Alfonso (2 tracks) - Cuban electronic artist
+6. PanDa (2 tracks) - Generic name, hard to identify
+7. Judeline (2 tracks) - Spanish indie artist
+8. Bizarrap (2 tracks) - Argentine producer
+9. лампабикт, Элли на маковом поле (1 track) - Russian indie
+10. Республика Полина (1 track) - Russian band
+11. zzoilo (1 track) - Spanish artist
+12. Zez Di Camargo & Luciano (1 track) - Brazilian sertanejo duo
+13. YG Marley (1 track) - Bob Marley's grandson (very new artist)
+14. The Phly Boyz (1 track) - Very obscure
+15. Schur (1 track) - Too generic/unknown
+16. Mon Laferte Juanes (1 track) - Collaboration
+17. La La Love You Samura (1 track) - Unknown/misspelled?
+18. La Fortaleza Real (1 track) - Cuban trova group
+19. JP Venom (1 track) - Very obscure
+20. Habana Blues (1 track) - Cuban group
+21. Gerardo Alfonso (1 track) - Cuban trova singer
+22. Edith Whiskers (1 track) - Indie folk artist
+23. Chloé Stafler (1 track) - French indie artist
+24. Al2 El Aldeano (1 track) - Cuban rapper
+
+Note: Many of these are Cuban or Russian artists not well-documented in English databases.
+
+

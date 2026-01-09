@@ -1,0 +1,92 @@
+name: Release Android
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release-android:
+    name: Build Android Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'mobile/package-lock.json'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install React frontend dependencies
+        run: |
+          cd React
+          npm ci
+
+      - name: Build React frontend
+        run: |
+          cd React
+          npm run build
+
+      - name: Copy web assets to mobile
+        run: |
+          rm -rf mobile/www
+          cp -r React/dist mobile/www
+
+      - name: Install mobile dependencies
+        run: |
+          cd mobile
+          npm ci
+
+      - name: Update Capacitor config for production
+        run: |
+          cd mobile
+          # Create production config that loads bundled assets
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.noxamusic.app",
+            "appName": "Noxa Music",
+            "webDir": "www",
+            "android": {
+              "allowMixedContent": true,
+              "backgroundColor": "#0a0a0a"
+            }
+          }
+          EOF
+
+      - name: Sync Capacitor
+        run: |
+          cd mobile
+          npx cap sync android
+
+      - name: Build Android Release APK
+        run: |
+          cd mobile/android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Build Android AAB
+        run: |
+          cd mobile/android
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            mobile/android/app/build/outputs/apk/release/app-release.apk
+            mobile/android/app/build/outputs/bundle/release/app-release.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

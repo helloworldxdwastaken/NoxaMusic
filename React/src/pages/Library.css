@@ -1,0 +1,41 @@
+.library-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.library-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.library-header h1 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.library-header .playlist-count {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.library-content {
+  min-height: 300px;
+}
+
+@media (max-width: 768px) {
+  .library-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .library-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .library-header .playlist-count {
+    font-size: 13px;
+  }
+}

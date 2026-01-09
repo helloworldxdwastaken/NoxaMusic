@@ -1,0 +1,103 @@
+.featured-card {
+  position: relative;
+  flex-shrink: 0;
+  width: 320px;
+  height: 180px;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.featured-artwork {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.featured-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.featured-card.has-artwork::before {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+}
+
+.featured-card:hover {
+  transform: scale(1.02);
+}
+
+.featured-content {
+  position: relative;
+  z-index: 2;
+}
+
+.featured-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.featured-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.featured-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Desktop */
+@media (min-width: 769px) {
+  .featured-card {
+    width: 400px;
+    height: 220px;
+  }
+}
+
+/* Featured Scroll Container */
+.featured-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 8px 0 16px 0;
+  margin: 0 -24px;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.featured-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .featured-scroll {
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+

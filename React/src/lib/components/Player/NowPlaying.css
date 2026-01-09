@@ -1,0 +1,216 @@
+.now-playing {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-base);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.now-playing.open {
+  transform: translateY(0);
+}
+
+/* Blurred artwork background */
+.now-playing-bg {
+  position: absolute;
+  inset: -50px; /* Extend beyond edges to cover blur bleeding */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(80px) saturate(1.5);
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+  transition: background-image 0.5s ease;
+}
+
+/* Dark overlay to ensure readability */
+.now-playing::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.5) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.now-playing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  position: relative;
+  z-index: 2;
+}
+
+.now-playing-header .close-btn,
+.now-playing-header .lyrics-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.now-playing-header .header-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.now-playing-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+  position: relative;
+  z-index: 2;
+}
+
+.artwork-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-height: 50vh;
+  position: relative;
+}
+
+.now-playing-artwork {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Playing state - normal size with green glow */
+.artwork-container.playing .now-playing-artwork {
+  transform: scale(1);
+  box-shadow: 
+    0 0 60px rgba(29, 185, 84, 0.4),
+    0 0 100px rgba(29, 185, 84, 0.2),
+    var(--shadow-lg);
+}
+
+/* Paused state - slightly smaller, no glow */
+.artwork-container.paused .now-playing-artwork {
+  transform: scale(0.92);
+  box-shadow: var(--shadow-md);
+}
+
+.now-playing .track-info {
+  width: 100%;
+  text-align: center;
+  margin: 32px 0;
+}
+
+.now-playing .track-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.now-playing .track-artist {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.now-playing .track-artist.clickable {
+  cursor: pointer;
+}
+
+.now-playing .track-artist.clickable:active {
+  color: var(--accent-green);
+  text-decoration: underline;
+}
+
+.controls-container {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.controls-container .controls {
+  justify-content: center;
+}
+
+/* Header spacer to balance the close button */
+.now-playing-header .header-spacer {
+  width: 40px;
+  height: 40px;
+}
+
+/* Action buttons at bottom */
+.now-playing-actions {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 24px;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+}
+
+.now-playing-actions .action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.now-playing-actions .action-btn:hover i,
+.now-playing-actions .action-btn:active i {
+  color: var(--accent-green);
+}
+
+.now-playing-actions .action-btn i {
+  font-size: 18px;
+  transition: color 0.2s ease;
+}
+
+.now-playing-actions .action-btn span {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Only show on mobile */
+@media (min-width: 769px) {
+  .now-playing {
+    display: none;
+  }
+}
+

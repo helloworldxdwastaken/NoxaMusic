@@ -1,0 +1,135 @@
+.topbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--sidebar-width);
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 24px;
+  z-index: 40;
+  background: linear-gradient(to bottom, rgba(10, 10, 10, 0.9), transparent);
+  pointer-events: none;
+}
+
+.topbar > * {
+  pointer-events: auto;
+}
+
+.topbar.mobile {
+  left: 0;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top);
+  height: calc(var(--topbar-height) + env(safe-area-inset-top));
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-subtle);
+  justify-content: space-between;
+}
+
+.topbar.mobile .topbar-logo {
+  flex: 1;
+}
+
+.topbar.mobile .topbar-right {
+  flex: 0;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.topbar-logo h1 {
+  font-size: 24px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-green) 0%, #1ed760 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  padding-right: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-xl);
+  transition: all 0.2s;
+}
+
+.user-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-highlight);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dropdown-icon {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .topbar {
+    left: 0;
+    padding: 0 16px;
+    padding-top: env(safe-area-inset-top);
+    background: var(--bg-base);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .topbar-nav {
+    display: none;
+  }
+}
+

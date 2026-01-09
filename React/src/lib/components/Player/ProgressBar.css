@@ -1,0 +1,30 @@
+.progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.progress-bar .time {
+  font-size: 11px;
+  color: var(--text-subdued);
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+}
+
+.progress-bar .time.current {
+  text-align: right;
+}
+
+.progress-bar .time.duration {
+  text-align: left;
+}
+
+.progress-bar.compact {
+  gap: 8px;
+}
+
+.progress-bar.compact .time {
+  display: none;
+}
+

@@ -1,0 +1,1198 @@
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import { spawn } from 'child_process';
+import axios from 'axios';
+import { fileURLToPath } from 'url';
+import * as artworkService from '../services/artworkService.js';
+import * as playlistCleanup from '../services/playlistCleanup.js';
+import { getUserIdFromToken as jwtGetUserIdFromToken } from '../middleware/jwtAuth.js';
+
+const router = express.Router();
+
+// Helper function to extract user ID from token using JWT
+function getUserIdFromToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return null;
+
+  // Use proper JWT verification
+  return jwtGetUserIdFromToken(req);
+}
+
+// Helper function to convert file system paths to URL paths for frontend
+function convertArtworkPathToURL(artworkPath) {
+  if (!artworkPath) return null;
+  
+  // Already a URL path (starts with /)
+  if (artworkPath.startsWith('/artwork_cache/') || artworkPath.startsWith('/music_lib/')) {
+    return artworkPath;
+  }
+  
+  // Convert full file system path to URL
+  const musicLibPath = process.env.MUSIC_PATH || '/mnt/UNO/Music_lib';
+  
+  if (artworkPath.startsWith(musicLibPath)) {
+    // Convert: /mnt/UNO/Music_lib/Artist/Album/cover.jpg → /music_lib/Artist/Album/cover.jpg
+    return artworkPath.replace(musicLibPath, '/music_lib');
+  }
+  
+  // If it's a relative path or unknown format, return as-is
+  return artworkPath;
+}
+
+// Middleware to authenticate user (optional - continues even without auth)
+const optionalAuth = (req, res, next) => {
+  req.userId = getUserIdFromToken(req);
+  next();
+};
+
+// Database and scanner will be injected from main app
+let database = null;
+let musicScanner = null;
+
+// Server-side caching for performance
+let libraryCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// ⚡ STREAMING CACHE - Cache file paths and stats to eliminate DB/FS checks
+const streamCache = new Map(); // Map<musicId, {file_path, contentType, fileSize, lastAccess}>
+const STREAM_CACHE_MAX_SIZE = 500; // Cache up to 500 tracks
+const STREAM_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+// Clean up old cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, entry] of streamCache.entries()) {
+    if (now - entry.lastAccess > STREAM_CACHE_TTL) {
+      streamCache.delete(id);
+    }
+  }
+  console.log(`🧹 Stream cache cleaned. Current size: ${streamCache.size}`);
+}, 10 * 60 * 1000); // Clean every 10 minutes
+
+// Use artwork service for background fetching
+async function fetchArtworkInBackground(music) {
+  return await artworkService.fetchArtworkInBackground(music, database);
+}
+
+export const setDatabase = (db) => {
+  database = db;
+};
+
+export const setMusicScanner = (scanner) => {
+  musicScanner = scanner;
+};
+
+// Re-export artwork functions from service for backwards compatibility
+export const downloadAndCacheArtwork = artworkService.downloadAndCacheArtwork;
+export const fetchAlbumArt = artworkService.fetchAlbumArt;
+export const fetchArtistImage = artworkService.fetchArtistImage;
+
+// Get music library (filtered by user unless admin)
+router.get('/library', optionalAuth, async (req, res) => {
+  try {
+    const t0 = Date.now();
+    if (!database || !musicScanner) {
+      return res.status(500).json({ error: 'Database or scanner not initialized' });
+    }
+
+    const { limit, offset = 0 } = req.query;
+    const limitNum = limit ? parseInt(limit) : null;
+    const userId = req.userId; // From optionalAuth middleware
+
+    // Disable cache for now with user-specific filtering
+    // TODO: Implement per-user caching later
+
+    console.log(`🔄 Loading library from database - User: ${userId || 'anonymous'}, limit: ${limitNum}, offset: ${offset}`);
+
+    // Get music filtered by user (admin sees all, regular users see their own + global)
+    const music = await database.getMusicLibrary(limitNum, parseInt(offset), userId);
+    console.log(`📊 Retrieved ${music.length} songs from database`);
+
+    // Convert artwork paths to URLs for frontend
+    const musicWithArt = music.map(song => ({
+      ...song,
+      album_cover: convertArtworkPathToURL(song.album_cover),
+      artist_image: convertArtworkPathToURL(song.artist_image)
+    }));
+
+    // Fetch artwork in background (non-blocking)
+    if (!limitNum) { // Only for full library requests
+      setImmediate(async () => {
+        console.log('🎨 Starting background artwork fetching...');
+        await fetchArtworkInBackground(music);
+      });
+    }
+
+    // Cache disabled for user-specific filtering
+    // (Each user sees different music, so per-user caching would be needed)
+
+    res.json(musicWithArt);
+  } catch (error) {
+    console.error('Get library error:', error);
+    res.status(500).json({ error: 'Failed to get library', message: error.message });
+  }
+});
+
+// Search music (global - users can discover all music)
+// Search music (global - users can discover all music)
+router.get('/search', async (req, res) => {
+  try {
+    const { q: query, type = 'all', limit = 50 } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ error: 'Search query required' });
+    }
+
+    if (!musicScanner) {
+      return res.status(500).json({ error: 'Music scanner not initialized' });
+    }
+
+    // Search all music globally
+    // Returns { songs: [], artists: [], albums: [] }
+    const results = await musicScanner.searchLibrary(query, type, parseInt(limit));
+
+    // Mark local results with isLocal flag
+    if (results.songs) {
+      results.songs = results.songs.map(song => ({
+        ...song,
+        isLocal: true,
+        source: 'local'
+      }));
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Search failed', message: error.message });
+  }
+});
+
+// Get music by artist
+router.get('/artist/:artist', async (req, res) => {
+  try {
+    const { artist } = req.params;
+    const { limit = 50 } = req.query;
+
+    if (!musicScanner) {
+      return res.status(500).json({ error: 'Music scanner not initialized' });
+    }
+
+    const results = await musicScanner.getMusicByArtist(artist, parseInt(limit));
+    res.json(results);
+  } catch (error) {
+    console.error('Get artist error:', error);
+    res.status(500).json({ error: 'Failed to get artist music', message: error.message });
+  }
+});
+
+// Get music by album
+router.get('/album/:album', async (req, res) => {
+  try {
+    const { album } = req.params;
+    const { limit = 50 } = req.query;
+
+    if (!musicScanner) {
+      return res.status(500).json({ error: 'Music scanner not initialized' });
+    }
+
+    const results = await musicScanner.getMusicByAlbum(album, parseInt(limit));
+    res.json(results);
+  } catch (error) {
+    console.error('Get album error:', error);
+    res.status(500).json({ error: 'Failed to get album music', message: error.message });
+  }
+});
+
+// Get all artists
+// OLD endpoints removed - using optimized versions below
+
+// Stream music file - OPTIMIZED with caching
+router.get('/stream/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    // ⚡ TRY CACHE FIRST - Skip DB and FS checks entirely for cached files
+    let cachedEntry = streamCache.get(id);
+
+    if (cachedEntry) {
+      // Update last access time
+      cachedEntry.lastAccess = Date.now();
+
+      // Use cached file path, content type, and file size
+      const { file_path, contentType, fileSize } = cachedEntry;
+      const range = req.headers.range;
+
+      // Update play count asynchronously (fire-and-forget)
+      if (musicScanner) {
+        musicScanner.updatePlayCount(id).catch(() => { });
+      }
+
+      // Stream from cache - INSTANT!
+      console.log(`⚡ [Stream Cache HIT] Track ${id} - Streaming from cache`);
+
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunksize = (end - start) + 1;
+        const file = fs.createReadStream(file_path, { start, end, highWaterMark: 512 * 1024 }); // 512KB chunks
+        const head = {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        };
+        res.writeHead(206, head);
+        file.pipe(res);
+      } else {
+        // Standard full-file response with aggressive caching
+        const head = {
+          'Content-Length': fileSize,
+          'Content-Type': contentType,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=31536000',
+        };
+        res.writeHead(200, head);
+        fs.createReadStream(file_path, { highWaterMark: 512 * 1024 }).pipe(res);
+      }
+      return; // Cache hit - done!
+    }
+
+    // ⚠️ CACHE MISS - Do full lookup (first time only)
+    const t0 = Date.now();
+    console.log(`⚠️ [Stream Cache MISS] Track ${id} - Loading from database`);
+
+    const music = await database.getMusicById(id);
+    if (!music) {
+      return res.status(404).json({ error: 'Music not found' });
+    }
+    console.log(`   DB lookup: ${Date.now() - t0}ms`);
+
+    // Get file stats (we trust DB file paths exist - only check size)
+    let stat;
+    try {
+      const t1 = Date.now();
+      stat = await fs.promises.stat(music.file_path);
+      console.log(`   File stat: ${Date.now() - t1}ms`);
+    } catch (error) {
+      // File not found - don't cache this failure
+      return res.status(404).json({ error: 'File not found on disk' });
+    }
+
+    console.log(`⚡ [Stream] Total backend time: ${Date.now() - t0}ms`);
+
+    // Update play count asynchronously (fire-and-forget - don't block streaming)
+    if (musicScanner) {
+      musicScanner.updatePlayCount(id).catch(err =>
+        console.error('Failed to update play count:', err)
+      );
+    }
+
+    // Set headers for streaming
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    // Determine content type based on file extension
+    const ext = path.extname(music.file_path).toLowerCase();
+    let contentType = 'audio/mpeg'; // default
+    let useFlac = false;
+    let needsTranscoding = false;
+
+    switch (ext) {
+      case '.mp3':
+        contentType = 'audio/mpeg';
+        break;
+      case '.flac':
+        contentType = 'audio/flac';
+        break;
+      case '.wav':
+        contentType = 'audio/wav';
+        break;
+      case '.m4a':
+      case '.aac':
+        // Modern browsers support M4A/AAC natively
+        contentType = 'audio/mp4';
+        break;
+      case '.ogg':
+        contentType = 'audio/ogg';
+        break;
+      default:
+        contentType = 'audio/mpeg';
+    }
+
+    // ⚡ ADD TO CACHE for next time (LRU eviction if cache full)
+    if (streamCache.size >= STREAM_CACHE_MAX_SIZE) {
+      // Evict oldest entry (LRU)
+      let oldestId = null;
+      let oldestTime = Infinity;
+      for (const [cacheId, entry] of streamCache.entries()) {
+        if (entry.lastAccess < oldestTime) {
+          oldestTime = entry.lastAccess;
+          oldestId = cacheId;
+        }
+      }
+      if (oldestId) {
+        streamCache.delete(oldestId);
+      }
+    }
+    streamCache.set(id, {
+      file_path: music.file_path,
+      contentType,
+      fileSize,
+      lastAccess: Date.now()
+    });
+
+    // For M4A/AAC files, transcode to MP3 on-the-fly using ffmpeg
+    if (needsTranscoding) {
+      console.log(`🔄 Transcoding ${ext} to MP3 for browser compatibility: ${path.basename(music.file_path)}`);
+
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Accept-Ranges', 'none'); // Disable range requests for transcoded streams
+
+      // Use ffmpeg to convert to MP3 on-the-fly with optimized settings
+      const ffmpeg = spawn('ffmpeg', [
+        '-i', music.file_path,
+        '-vn', // No video
+        '-f', 'mp3',
+        '-acodec', 'libmp3lame',
+        '-ab', '192k', // Lower bitrate for faster encoding
+        '-ar', '44100',
+        '-threads', '0', // Use all CPU cores
+        '-bufsize', '64k', // Smaller buffer for faster startup
+        '-'
+      ]);
+
+      ffmpeg.stdout.pipe(res);
+
+      ffmpeg.stderr.on('data', (data) => {
+        // Suppress ffmpeg verbose output
+      });
+
+      ffmpeg.on('error', (error) => {
+        console.error('FFmpeg error:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Transcoding failed' });
+        }
+      });
+
+      req.on('close', () => {
+        ffmpeg.kill('SIGKILL');
+      });
+
+      return; // Exit early - ffmpeg handles the streaming
+    }
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(music.file_path, { start, end, highWaterMark: 512 * 1024 });
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000',
+      };
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      // Standard full-file response
+      const head = {
+        'Content-Length': fileSize,
+        'Content-Type': contentType,
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=31536000',
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(music.file_path, { highWaterMark: 512 * 1024 }).pipe(res);
+    }
+  } catch (error) {
+    console.error('Stream error:', error);
+    res.status(500).json({ error: 'Streaming failed', message: error.message });
+  }
+});
+
+// Check if tracks exist in library (for import optimization)
+router.post('/check-existing', async (req, res) => {
+  try {
+    const { tracks } = req.body; // Array of {artist, title}
+
+    if (!tracks || !Array.isArray(tracks)) {
+      return res.status(400).json({ error: 'Tracks array required' });
+    }
+
+    const results = [];
+
+    for (const track of tracks) {
+      const existing = await database.findMusicByArtistAndTitle(track.artist, track.title);
+      results.push({
+        artist: track.artist,
+        title: track.title,
+        exists: !!existing,
+        musicId: existing ? existing.id : null
+      });
+    }
+
+    const existingCount = results.filter(r => r.exists).length;
+    console.log(`✅ Found ${existingCount}/${tracks.length} tracks already in library`);
+
+    res.json({
+      success: true,
+      results: results,
+      existingCount: existingCount,
+      newCount: tracks.length - existingCount
+    });
+  } catch (error) {
+    console.error('Check existing tracks error:', error);
+    res.status(500).json({ error: 'Failed to check tracks', message: error.message });
+  }
+});
+
+// Manual scan of music library
+router.post('/scan-library', optionalAuth, async (req, res) => {
+  try {
+    if (!musicScanner) {
+      return res.status(500).json({ error: 'Music scanner not initialized' });
+    }
+
+    const userId = req.userId; // From optionalAuth middleware
+    console.log(`🔄 Starting manual library scan... (User: ${userId || 'anonymous'})`);
+
+    // Wrap scan in try-catch to handle individual file errors gracefully
+    let result;
+    try {
+      result = await musicScanner.scanAllDirectories(userId);
+    } catch (scanError) {
+      // If scan partially completed, still invalidate cache
+      libraryCache = null;
+      cacheTimestamp = null;
+
+      // Log but don't fail the whole request
+      console.error('⚠️ Scan completed with errors:', scanError.message);
+
+      return res.json({
+        success: true,
+        warning: 'Scan completed with some errors',
+        message: `Library scan completed with warnings. Some files may have been skipped due to duplicates.`,
+        error_detail: scanError.message
+      });
+    }
+
+    // Invalidate cache after scan
+    libraryCache = null;
+    cacheTimestamp = null;
+    console.log('🗑️ Library cache invalidated after scan');
+
+    // Start post-scan tasks in background (non-blocking)
+    setImmediate(async () => {
+      try {
+        // First, cleanup/reconnect orphaned playlist tracks
+        console.log('🔗 Starting playlist cleanup after library scan...');
+        const playlistResult = await playlistCleanup.cleanupOrphanedPlaylistTracks(database);
+        console.log(`✅ Playlist cleanup complete: ${playlistResult.reconnected} reconnected, ${playlistResult.removed} removed`);
+
+        // Then, fetch artwork for missing tracks
+        console.log('🎨 Starting artwork fetch after library scan...');
+        const artworkResult = await artworkService.fetchArtworkForLibrary(database, false);
+        console.log(`✅ Artwork fetch complete: ${artworkResult.updated} tracks updated`);
+      } catch (error) {
+        console.error('⚠️ Error in post-scan tasks:', error.message);
+      }
+    });
+
+    res.json({
+      success: true,
+      message: `Library scan completed: ${result.scanned} files scanned, ${result.added} new files added, ${result.updated} updated, ${result.removed} removed. Artwork fetching started in background.`,
+      scanned: result.scanned,
+      added: result.added,
+      updated: result.updated,
+      removed: result.removed
+    });
+  } catch (error) {
+    console.error('Manual scan error:', error);
+    res.status(500).json({ error: 'Failed to scan library', message: error.message });
+  }
+});
+
+// Invalidate library cache
+router.post('/invalidate-cache', async (req, res) => {
+  try {
+    libraryCache = null;
+    cacheTimestamp = null;
+    console.log('🗑️ Library cache manually invalidated');
+
+    res.json({
+      success: true,
+      message: 'Library cache invalidated successfully'
+    });
+  } catch (error) {
+    console.error('Cache invalidation error:', error);
+    res.status(500).json({ error: 'Failed to invalidate cache', message: error.message });
+  }
+});
+
+// Refresh library with updated artwork
+router.post('/refresh', async (req, res) => {
+  try {
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    const forceRefresh = Boolean(req.body?.force);
+    console.log(`🎨 Received library refresh request (force: ${forceRefresh})`);
+
+    // Start background artwork fetching
+    setImmediate(async () => {
+      try {
+        const artworkResult = await artworkService.fetchArtworkForLibrary(database, forceRefresh);
+        console.log(`✅ Force:${forceRefresh} artwork refresh complete: ${artworkResult.updated}/${artworkResult.total} tracks updated`);
+      } catch (artworkError) {
+        console.error('⚠️ Error during artwork refresh:', artworkError);
+      }
+    });
+
+    // Invalidate cache so next request gets fresh data
+    libraryCache = null;
+    cacheTimestamp = null;
+
+    res.json({
+      success: true,
+      message: forceRefresh
+        ? 'Started force artwork refresh for entire library'
+        : 'Started artwork refresh for tracks missing artwork',
+      force: forceRefresh
+    });
+  } catch (error) {
+    console.error('Refresh library error:', error);
+    res.status(500).json({ error: 'Failed to refresh library', message: error.message });
+  }
+});
+
+// Manually fetch artwork for specific album
+router.post('/fetch-artwork', async (req, res) => {
+  try {
+    const { artist, album } = req.body;
+
+    if (!artist || !album) {
+      return res.status(400).json({ error: 'Artist and album are required' });
+    }
+
+    console.log(`🎨 Manual artwork fetch for: ${artist} - ${album}`);
+
+    // Find the music entry to get file path for local artwork check
+    const music = await database.getMusicByTitleAndArtist('', artist);
+    let filePath = null;
+    if (music && music.length > 0) {
+      // Find a track from the specific album
+      const albumTrack = music.find(track => track.album === album);
+      if (albumTrack) {
+        filePath = albumTrack.file_path;
+      } else {
+        filePath = music[0].file_path; // Fallback to any track from the artist
+      }
+    }
+
+    // Fetch album art (will check local first if filePath is provided)
+    const albumArt = await fetchAlbumArt(artist, album, filePath);
+
+    // Fetch artist image
+    const artistImage = await fetchArtistImage(artist);
+
+    // Update database if artwork was found
+    if (albumArt || artistImage) {
+      if (music && music.length > 0) {
+        // Update the first matching entry
+        await database.updateMusicArtwork(music[0].id, albumArt, artistImage);
+      }
+    }
+
+    res.json({
+      success: true,
+      albumArt: albumArt ? 'found' : 'not found',
+      artistImage: artistImage ? 'found' : 'not found',
+      message: `Artwork fetch completed for ${artist} - ${album}`
+    });
+  } catch (error) {
+    console.error('Manual artwork fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch artwork', message: error.message });
+  }
+});
+
+// Get library statistics
+// Get library stats (lightweight - no song data, just counts and totals)
+router.get('/stats', async (req, res) => {
+  try {
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    // Get only file_path and file_size for efficiency
+    const music = await database.getMusicLibrary(null, 0, null);
+
+    // Calculate total storage
+    let totalSize = 0;
+    const artistGroups = {};
+    const albumGroups = {};
+
+    music.forEach(track => {
+      // Add to total storage
+      totalSize += track.file_size || 0;
+
+      // Group by artist (use metadata first, fallback to folder-based)
+      let artist = track.artist || 'Unknown Artist';
+      // Fallback to folder-based if no metadata
+      if (artist === 'Unknown Artist' && track.file_path) {
+        const pathParts = track.file_path.split('/');
+        // Get music base path from environment (same as used everywhere else)
+        const musicBasePath = process.env.MUSIC_PATH || 'music';
+        const musicFolderName = musicBasePath.split('/').pop();
+        // Look for music folder in path
+        const musicIndex = pathParts.findIndex(part =>
+          part === musicFolderName ||
+          part === 'music' ||
+          part === 'MusicLibrary'
+        );
+        if (musicIndex !== -1 && pathParts[musicIndex + 1]) {
+          artist = pathParts[musicIndex + 1];
+        }
+      }
+      if (!artistGroups[artist]) artistGroups[artist] = 0;
+      artistGroups[artist]++;
+
+      // Group by album (use metadata first, fallback to folder-based)
+      let album = track.album || 'Unknown Album';
+      // Fallback to folder-based if no metadata
+      if (album === 'Unknown Album' && track.file_path) {
+        const pathParts = track.file_path.split('/');
+        const musicBasePath = process.env.MUSIC_PATH || 'music';
+        const musicFolderName = musicBasePath.split('/').pop();
+        const musicIndex = pathParts.findIndex(part =>
+          part === musicFolderName ||
+          part === 'music' ||
+          part === 'MusicLibrary'
+        );
+        if (musicIndex !== -1) {
+          if (pathParts[musicIndex + 1]) artist = pathParts[musicIndex + 1];
+          if (pathParts.length >= 3) album = pathParts[pathParts.length - 2];
+        }
+      }
+
+      const albumKey = `${artist}|||${album}`;
+      if (!albumGroups[albumKey]) albumGroups[albumKey] = 0;
+      albumGroups[albumKey]++;
+    });
+
+    // Format storage size
+    const formatSize = (bytes) => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    res.json({
+      totalSongs: music.length,
+      totalArtists: Object.keys(artistGroups).length,
+      totalAlbums: Object.keys(albumGroups).length,
+      totalStorage: formatSize(totalSize),
+      totalStorageBytes: totalSize
+    });
+  } catch (error) {
+    console.error('Get library stats error:', error);
+    res.status(500).json({ error: 'Failed to get library stats', message: error.message });
+  }
+});
+
+// Get artists list (optimized SQL query, filtered by user)
+router.get('/artists', optionalAuth, async (req, res) => {
+  try {
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    const userId = req.userId; // From optionalAuth middleware
+    const artists = await database.getArtistsGrouped(userId);
+
+    res.json(artists);
+  } catch (error) {
+    console.error('Get artists error:', error);
+    res.status(500).json({ error: 'Failed to get artists', message: error.message });
+  }
+});
+
+// Get albums list (fast endpoint for albums view, filtered by user)
+router.get('/albums', optionalAuth, async (req, res) => {
+  try {
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    const userId = req.userId; // From optionalAuth middleware
+    const albums = await database.getAlbumsGrouped(userId);
+
+    res.json(albums);
+  } catch (error) {
+    console.error('Get albums error:', error);
+    res.status(500).json({ error: 'Failed to get albums', message: error.message });
+  }
+});
+
+// Add all centralized music to user's library (one-time migration)
+router.post('/add-all-to-my-library', async (req, res) => {
+  try {
+    // Get user from token
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    let userId = null;
+    if (token) {
+      const userIdMatch = token.match(/token_(\d+)/);
+      if (userIdMatch) {
+        userId = parseInt(userIdMatch[1]);
+      }
+    }
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get all music from centralized library
+    const allMusic = await database.getMusicLibrary(1000, 0, null);
+
+    // Add each to user's library
+    let added = 0;
+    for (const music of allMusic) {
+      try {
+        await database.addToUserLibrary(userId, music.id);
+        added++;
+      } catch (err) {
+        // Ignore duplicates
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Added ${added} tracks to your library`,
+      total: allMusic.length
+    });
+  } catch (error) {
+    console.error('Add all to library error:', error);
+    res.status(500).json({ error: 'Failed to add music to library', message: error.message });
+  }
+});
+
+// Scan music library
+router.post('/scan', optionalAuth, async (req, res) => {
+  try {
+    if (!musicScanner) {
+      return res.status(500).json({ error: 'Music scanner not initialized' });
+    }
+
+    const userId = req.userId; // From optionalAuth middleware
+    console.log(`🔄 Starting music library scan... (User: ${userId || 'anonymous'})`);
+    const result = await musicScanner.scanAllDirectories(userId);
+
+    res.json({
+      success: true,
+      message: `Scan completed: ${result.scanned} files scanned, ${result.added} new files added`,
+      scanned: result.scanned,
+      added: result.added
+    });
+  } catch (error) {
+    console.error('Scan error:', error);
+    res.status(500).json({ error: 'Scan failed', message: error.message });
+  }
+});
+
+// Clean up duplicate songs, unknown artists, and missing files
+router.post('/cleanup', async (req, res) => {
+  try {
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    console.log('🧹 Starting comprehensive cleanup...');
+
+    // Get all music entries
+    const allMusic = await database.getMusicLibrary(1000, 0);
+
+    let duplicatesRemoved = 0;
+    let unknownArtistsRemoved = 0;
+    let missingFilesRemoved = 0;
+
+    // 1. Remove tracks with "Unknown Artist"
+    const unknownArtistTracks = allMusic.filter(song =>
+      !song.artist ||
+      song.artist.toLowerCase().includes('unknown') ||
+      song.artist.trim() === ''
+    );
+
+    for (const track of unknownArtistTracks) {
+      await database.deleteMusicById(track.id);
+      unknownArtistsRemoved++;
+      console.log(`🗑️ Removed unknown artist track: ${track.title}`);
+    }
+
+    // 2. Remove tracks with missing files (with safety check for unmounted drives)
+    const musicPath = process.env.MUSIC_PATH || path.resolve(path.join(__dirname, '..', '..', 'music'));
+    const isDriveAccessible = fs.existsSync(musicPath);
+
+    if (!isDriveAccessible) {
+      console.warn(`⚠️ Cleanup Safety Lock: Drive not accessible at ${musicPath}. Skipping missing files cleanup.`);
+    } else {
+      const missingFileTracks = allMusic.filter(song => {
+        if (!song.file_path) return true;
+        try {
+          return !fs.existsSync(song.file_path);
+        } catch (error) {
+          return true;
+        }
+      });
+
+      for (const track of missingFileTracks) {
+        await database.deleteMusicById(track.id);
+        missingFilesRemoved++;
+        console.log(`🗑️ Removed missing file track: ${track.title} - ${track.artist}`);
+      }
+    }
+
+    const totalRemoved = unknownArtistsRemoved + missingFilesRemoved;
+
+    res.json({
+      success: true,
+      message: `Cleanup completed: ${totalRemoved} entries removed`,
+      duplicatesRemoved: 0,
+      unknownArtistsRemoved,
+      missingFilesRemoved,
+      totalRemoved
+    });
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({ error: 'Cleanup failed', message: error.message });
+  }
+});
+
+// Get music info
+router.get('/info/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    const music = await database.getMusicById(id);
+    if (!music) {
+      return res.status(404).json({ error: 'Music not found' });
+    }
+
+    // Check if file exists and get file info
+    const fileInfo = musicScanner.getFileInfo(music.file_path);
+
+    res.json({
+      ...music,
+      fileInfo
+    });
+  } catch (error) {
+    console.error('Get music info error:', error);
+    res.status(500).json({ error: 'Failed to get music info', message: error.message });
+  }
+});
+
+// Delete track permanently (removes from library, all playlists, and optionally deletes file)
+// DISABLED FOR SAFETY - Cannot delete tracks permanently to prevent accidental data loss
+/*
+router.delete('/track/:musicId', async (req, res) => {
+  try {
+    const { musicId } = req.params;
+    const deleteFile = req.query.deleteFile === 'true'; // Optional: delete physical file
+
+    if (!database) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    console.log(`🗑️ Deleting track ${musicId} (deleteFile: ${deleteFile})...`);
+
+    // Get track info before deleting
+    const track = await database.getMusicById(parseInt(musicId));
+    if (!track) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    // Delete from database (will cascade delete from playlists via foreign key)
+    await database.deleteMusicById(parseInt(musicId));
+    console.log(`✅ Track removed from database: ${track.title} - ${track.artist}`);
+
+    // Optionally delete the physical file
+    if (deleteFile && track.file_path) {
+      try {
+        if (fs.existsSync(track.file_path)) {
+          fs.unlinkSync(track.file_path);
+          console.log(`✅ File deleted: ${track.file_path}`);
+        }
+      } catch (fileError) {
+        console.warn(`⚠️ Could not delete file: ${fileError.message}`);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Track deleted permanently',
+      deletedFile: deleteFile
+    });
+  } catch (error) {
+    console.error('Delete track error:', error);
+    res.status(500).json({ error: 'Failed to delete track', message: error.message });
+  }
+});
+*/
+
+// ==================== MANUAL RELINK ENDPOINTS ====================
+
+/**
+ * Manual relink endpoint - Shows original metadata context
+ * POST /api/library/manual-relink
+ */
+router.post('/manual-relink', async (req, res) => {
+  try {
+    const { stableId, newFilePath, updateMetadata = true } = req.body;
+
+    if (!stableId || !newFilePath) {
+      return res.status(400).json({ 
+        error: 'stableId and newFilePath are required' 
+      });
+    }
+
+    // Verify new file exists
+    if (!fs.existsSync(newFilePath)) {
+      return res.status(404).json({ 
+        error: 'New file not found',
+        path: newFilePath 
+      });
+    }
+
+    // Get original song info (including original metadata)
+    const originalSong = await database.getMusicByStableId(stableId);
+    if (!originalSong) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    // Perform relink
+    const result = await database.manualRelink(stableId, newFilePath, updateMetadata);
+
+    // Invalidate cache
+    libraryCache = null;
+    cacheTimestamp = null;
+
+    res.json({
+      success: true,
+      message: `Successfully relinked "${originalSong.original_title || originalSong.title}"`,
+      stable_id: stableId,
+      original_info: {
+        artist: originalSong.original_artist || originalSong.artist,
+        title: originalSong.original_title || originalSong.title,
+        album: originalSong.original_album || originalSong.album,
+        first_added: originalSong.first_added_at || originalSong.added_at,
+        original_path: originalSong.original_file_path || originalSong.file_path
+      },
+      old_path: originalSong.file_path,
+      new_path: newFilePath,
+      times_relinked: (originalSong.times_relinked || 0) + 1,
+      playlists_preserved: true
+    });
+  } catch (error) {
+    console.error('Manual relink error:', error);
+    res.status(500).json({ 
+      error: 'Failed to relink', 
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * Get song history (all relinking and changes)
+ * GET /api/library/song/:stable_id/history
+ */
+router.get('/song/:stable_id/history', async (req, res) => {
+  try {
+    const { stable_id } = req.params;
+    
+    // Get current song info
+    const song = await database.getRelinkHistory(stable_id);
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+    
+    // Get change history
+    const history = await new Promise((resolve, reject) => {
+      database.db.all(
+        'SELECT * FROM song_history WHERE stable_id = ? ORDER BY created_at DESC',
+        [stable_id],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
+    
+    res.json({
+      success: true,
+      song: {
+        id: song.stable_id,
+        original: {
+          artist: song.original_artist,
+          title: song.original_title,
+          album: song.original_album,
+          path: song.original_file_path,
+          first_added: song.first_added_at
+        },
+        current: {
+          artist: song.current_artist,
+          title: song.current_title,
+          album: song.current_album,
+          path: song.current_file_path,
+          available: song.is_available === 1
+        },
+        stats: {
+          times_relinked: song.times_relinked || 0,
+          last_relinked: song.last_relinked_at
+        }
+      },
+      history
+    });
+  } catch (error) {
+    console.error('Get history error:', error);
+    res.status(500).json({ error: 'Failed to get history' });
+  }
+});
+
+/**
+ * Get all relink suggestions (with original metadata)
+ * GET /api/library/relink-suggestions
+ */
+router.get('/relink-suggestions', async (req, res) => {
+  try {
+    const suggestions = await new Promise((resolve, reject) => {
+      database.db.all(
+        `SELECT 
+          rs.*,
+          ml.original_title,
+          ml.original_artist,
+          ml.original_album,
+          ml.original_file_path,
+          ml.file_path as last_known_path,
+          ml.is_available
+         FROM relink_suggestions rs
+         JOIN music_library ml ON rs.stable_id = ml.stable_id
+         WHERE rs.status = 'pending'
+         ORDER BY rs.confidence DESC, rs.created_at DESC`,
+        [],
+        (err, rows) => {
+          if (err) reject(err);
+          else {
+            // Parse JSON original_info
+            const parsed = rows.map(row => ({
+              ...row,
+              original_info: JSON.parse(row.original_info || '{}')
+            }));
+            resolve(parsed);
+          }
+        }
+      );
+    });
+
+    res.json({
+      success: true,
+      count: suggestions.length,
+      suggestions
+    });
+  } catch (error) {
+    console.error('Get suggestions error:', error);
+    res.status(500).json({ error: 'Failed to get suggestions' });
+  }
+});
+
+/**
+ * Get all duplicate groups
+ * GET /api/library/duplicates
+ */
+router.get('/duplicates', async (req, res) => {
+  try {
+    const groups = await database.getDuplicateGroups();
+    
+    res.json({
+      success: true,
+      count: groups.length,
+      groups
+    });
+  } catch (error) {
+    console.error('Get duplicates error:', error);
+    res.status(500).json({ error: 'Failed to get duplicates' });
+  }
+});
+
+/**
+ * Mark song as primary in duplicate group
+ * POST /api/library/mark-primary
+ */
+router.post('/mark-primary', async (req, res) => {
+  try {
+    const { stableId } = req.body;
+    
+    if (!stableId) {
+      return res.status(400).json({ error: 'stableId is required' });
+    }
+    
+    await database.markAsPrimary(stableId);
+    
+    // Invalidate cache
+    libraryCache = null;
+    cacheTimestamp = null;
+    
+    res.json({
+      success: true,
+      message: 'Song marked as primary'
+    });
+  } catch (error) {
+    console.error('Mark primary error:', error);
+    res.status(500).json({ error: 'Failed to mark as primary' });
+  }
+});
+
+/**
+ * Delete song by stable_id
+ * DELETE /api/library/song/:stable_id
+ * DISABLED FOR SAFETY - Cannot delete tracks permanently to prevent accidental data loss
+ */
+/*
+router.delete('/song/:stable_id', async (req, res) => {
+  try {
+    const { stable_id } = req.params;
+    
+    const result = await database.deleteByStableId(stable_id);
+    
+    // Invalidate cache
+    libraryCache = null;
+    cacheTimestamp = null;
+    
+    res.json({
+      success: true,
+      message: 'Song deleted',
+      changes: result.changes
+    });
+  } catch (error) {
+    console.error('Delete song error:', error);
+    res.status(500).json({ error: 'Failed to delete song' });
+  }
+});
+*/
+
+export default router;

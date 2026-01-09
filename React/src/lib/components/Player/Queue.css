@@ -1,0 +1,238 @@
+.queue-panel {
+  position: fixed;
+  right: 0;
+  bottom: var(--player-height);
+  width: 350px;
+  max-height: calc(100vh - var(--player-height) - 20px);
+  display: flex;
+  flex-direction: column;
+  z-index: 600; /* Above Now Playing (500) */
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  animation: slideUp 0.3s ease;
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 12px;
+}
+
+.queue-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Queue Tabs */
+.queue-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-highlight);
+  padding: 4px;
+  border-radius: var(--radius-md);
+}
+
+.queue-tab {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.queue-tab:hover {
+  color: var(--text-primary);
+}
+
+.queue-tab.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.queue-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clear-btn {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.clear-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-highlight);
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-highlight);
+}
+
+.queue-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.queue-section {
+  margin-bottom: 24px;
+}
+
+.queue-section:last-child {
+  margin-bottom: 0;
+}
+
+.queue-section h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.queue-track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.queue-track:hover {
+  background: var(--bg-highlight);
+}
+
+.queue-track.current {
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.queue-track img {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.queue-track .track-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.queue-track .title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-track.current .title {
+  color: var(--accent-green);
+}
+
+.queue-track .artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-track .duration {
+  font-size: 12px;
+  color: var(--text-subdued);
+}
+
+.queue-track .remove-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-subdued);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.queue-track:hover .remove-btn {
+  opacity: 1;
+}
+
+.queue-track .remove-btn:hover {
+  color: var(--accent-red);
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.queue-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-subdued);
+}
+
+.queue-empty i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.queue-empty p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.queue-empty span {
+  font-size: 14px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .queue-panel {
+    width: 100%;
+    bottom: 0;
+    top: 0;
+    max-height: 100vh;
+    border-radius: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+

@@ -1,0 +1,98 @@
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-full-width {
+  width: 100%;
+}
+
+.input-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--bg-highlight);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.input::placeholder {
+  color: var(--text-subdued);
+}
+
+.input:focus {
+  border-color: var(--accent-green);
+  background: var(--bg-elevated);
+  outline: none;
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* With Icon */
+.input-container.has-icon.icon-left .input {
+  padding-left: 44px;
+}
+
+.input-container.has-icon.icon-right .input {
+  padding-right: 44px;
+}
+
+.input-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  color: var(--text-subdued);
+  pointer-events: none;
+}
+
+.input-container.icon-left .input-icon {
+  left: 0;
+}
+
+.input-container.icon-right .input-icon {
+  right: 0;
+}
+
+/* Error State */
+.input-container.has-error .input {
+  border-color: var(--accent-red);
+}
+
+.input-error {
+  font-size: 12px;
+  color: var(--accent-red);
+}
+
+/* Search Input Variant */
+.input-search {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: var(--radius-xl);
+}
+
+.input-search:focus {
+  background: rgba(255, 255, 255, 0.15);
+}
+

@@ -1,0 +1,131 @@
+.playlist-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.playlist-card:hover {
+  background: var(--bg-highlight);
+  transform: translateY(-4px);
+}
+
+@media (max-width: 768px) {
+  .playlist-card {
+    padding: 10px;
+  }
+  
+  .playlist-artwork {
+    margin-bottom: 8px;
+  }
+  
+  .playlist-name {
+    font-size: 12px;
+  }
+  
+  .playlist-meta {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlist-card {
+    padding: 8px;
+  }
+  
+  .playlist-artwork {
+    margin-bottom: 6px;
+  }
+  
+  .playlist-name {
+    font-size: 11px;
+  }
+  
+  .playlist-meta {
+    font-size: 9px;
+  }
+}
+
+.playlist-artwork {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%; /* Square aspect ratio */
+  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-highlight);
+  flex-shrink: 0;
+}
+
+.playlist-artwork img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.playlist-artwork .play-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-green);
+  border-radius: 50%;
+  color: #000;
+  font-size: 18px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.playlist-card:hover .play-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.playlist-artwork .play-btn:hover {
+  transform: scale(1.05);
+  background: var(--accent-green-hover);
+}
+
+.playlist-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.playlist-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Generated Playlist Badge */
+.playlist-card.generated .playlist-artwork::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    135deg,
+    rgba(29, 185, 84, 0.3) 0%,
+    transparent 60%
+  );
+}
+

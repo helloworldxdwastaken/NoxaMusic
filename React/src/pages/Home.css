@@ -1,0 +1,99 @@
+.home-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.home-header {
+  margin-bottom: 32px;
+}
+
+.home-header h1 {
+  font-size: 2rem;
+}
+
+.home-section {
+  margin-bottom: 40px;
+}
+
+.home-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Quick Picks Grid */
+.quick-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.quick-pick-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px;
+  padding-right: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s;
+  overflow: hidden;
+}
+
+.quick-pick-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.quick-pick-card img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+}
+
+.quick-pick-card span {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Featured skeleton cards */
+.featured-skeleton {
+  min-width: 280px;
+  max-width: 320px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+/* Compact empty state for sections */
+.empty-state.compact {
+  padding: 40px 24px;
+}
+
+.empty-state.compact i {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.empty-state.compact h3 {
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .home-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .quick-picks {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-pick-card img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .empty-state.compact {
+    padding: 32px 16px;
+  }
+}
+

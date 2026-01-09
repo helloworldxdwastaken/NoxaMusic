@@ -1,0 +1,244 @@
+.track-card {
+  display: grid;
+  grid-template-columns: auto 48px 1fr auto auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.track-card:hover {
+  background: var(--bg-highlight);
+}
+
+.track-card.active {
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.track-card.compact {
+  grid-template-columns: 48px 1fr auto auto;
+  padding: 6px 12px;
+}
+
+/* Index */
+.track-index {
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-subdued);
+  font-size: 14px;
+}
+
+.index-number {
+  font-variant-numeric: tabular-nums;
+}
+
+.track-index .play-btn {
+  display: none;
+  width: 24px;
+  height: 24px;
+  color: var(--text-primary);
+}
+
+.track-card:hover .index-number,
+.track-card:hover .playing-indicator {
+  display: none;
+}
+
+.track-card:hover .track-index .play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Playing Indicator */
+.playing-indicator {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+
+.playing-indicator span {
+  width: 3px;
+  background: var(--accent-green);
+  border-radius: 1px;
+  animation: playing-bar 0.5s ease-in-out infinite alternate;
+}
+
+.playing-indicator span:nth-child(1) {
+  height: 30%;
+  animation-delay: 0s;
+}
+
+.playing-indicator span:nth-child(2) {
+  height: 60%;
+  animation-delay: 0.15s;
+}
+
+.playing-indicator span:nth-child(3) {
+  height: 100%;
+  animation-delay: 0.3s;
+}
+
+@keyframes playing-bar {
+  0% { height: 30%; }
+  100% { height: 100%; }
+}
+
+/* Artwork */
+.track-artwork {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  max-width: 48px;
+  max-height: 48px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-highlight);
+}
+
+.track-artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 1;
+}
+
+.artwork-play-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.track-card:hover .artwork-play-btn {
+  opacity: 1;
+}
+
+/* Info */
+.track-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.track-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-title.active {
+  color: var(--accent-green);
+}
+
+.track-artist {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.track-artist:hover {
+  text-decoration: underline;
+  color: var(--text-primary);
+}
+
+/* Album */
+.track-album {
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex: 0 0 200px;
+}
+
+.track-album:hover {
+  text-decoration: underline;
+}
+
+/* Actions */
+.track-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.track-card:hover .track-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-press);
+}
+
+.action-btn.remove-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Duration */
+.track-duration {
+  font-size: 14px;
+  color: var(--text-subdued);
+  font-variant-numeric: tabular-nums;
+  width: 50px;
+  text-align: right;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .track-card {
+    grid-template-columns: 48px 1fr auto auto;
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .track-index {
+    display: none;
+  }
+
+  .track-album {
+    display: none;
+  }
+
+  .track-actions {
+    opacity: 1;
+  }
+
+  .track-duration {
+    width: auto;
+  }
+}
+

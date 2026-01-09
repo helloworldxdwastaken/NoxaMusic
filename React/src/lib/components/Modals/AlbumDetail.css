@@ -1,0 +1,249 @@
+.album-detail-modal {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  animation: scaleIn 0.3s ease;
+  padding: 24px;
+}
+
+.album-detail-modal .modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.album-detail-modal .modal-close:hover {
+  background: rgba(0, 0, 0, 0.6);
+  transform: scale(1.1);
+}
+
+.album-detail-modal .modal-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.album-detail-modal .modal-back:hover {
+  background: rgba(0, 0, 0, 0.6);
+  transform: scale(1.1);
+}
+
+/* Header */
+.album-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.album-artwork-container {
+  width: 200px;
+  height: 200px;
+  min-width: 200px;
+  min-height: 200px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  background: var(--bg-highlight);
+}
+
+.album-artwork-container.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.album-artwork {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.album-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.album-type {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-subdued);
+}
+
+.album-title {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 8px 0;
+  line-height: 1.1;
+  word-break: break-word;
+  color: var(--text-primary);
+}
+
+.album-meta {
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.album-meta .separator {
+  color: var(--text-subdued);
+}
+
+.artist-link {
+  cursor: pointer;
+  transition: color 0.2s;
+  font-weight: 500;
+}
+
+.artist-link:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+/* Actions */
+.album-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Tracks */
+.album-tracks {
+  min-height: 100px;
+}
+
+.album-tracks .track-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Loading skeleton */
+.album-loading .skeleton {
+  background: var(--bg-highlight);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.skeleton-track + .skeleton-track {
+  border-top: 1px solid var(--border-subtle);
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Empty state */
+.modal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.modal-empty i {
+  font-size: 48px;
+  color: var(--text-subdued);
+  margin-bottom: 16px;
+}
+
+.modal-empty h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.modal-empty p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .album-detail-modal {
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 16px;
+    padding-top: max(16px, calc(env(safe-area-inset-top) + 48px));
+    padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 16px));
+  }
+
+  .album-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .album-artwork-container {
+    width: 180px;
+    height: 180px;
+    min-width: 180px;
+    min-height: 180px;
+  }
+
+  .album-info {
+    width: 100%;
+  }
+
+  .album-title {
+    font-size: 24px;
+  }
+
+  .album-meta {
+    justify-content: center;
+  }
+
+  .album-actions {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .album-tracks {
+    padding: 0;
+  }
+
+  .modal-empty {
+    padding: 48px 16px;
+  }
+}

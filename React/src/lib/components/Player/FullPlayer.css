@@ -1,0 +1,114 @@
+.full-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--player-height);
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr minmax(180px, 1fr);
+  align-items: center;
+  padding: 0 24px;
+  z-index: 100;
+}
+
+/* Track Info */
+.player-track {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.player-artwork {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.player-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.player-artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.player-artist:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.player-empty {
+  color: var(--text-subdued);
+  font-size: 14px;
+}
+
+/* Center Controls */
+.player-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 600px;
+  width: 100%;
+  justify-self: center;
+}
+
+.player-center .progress-bar {
+  width: 100%;
+}
+
+/* Right Controls */
+.player-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.player-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.player-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.player-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-btn.active {
+  color: var(--accent-green);
+}
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .full-player {
+    display: none;
+  }
+}
+
