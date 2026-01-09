@@ -1,6 +1,24 @@
-// In development, use relative paths (Vite proxy handles it)
-// In production, use the full API URL
-const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'https://stream.noxamusic.com');
+// Detect if running in Capacitor
+const isCapacitor = typeof window !== 'undefined' && 
+  (window.location.protocol === 'file:' || 
+   window.location.protocol === 'capacitor:' ||
+   !!(window as any).Capacitor);
+
+// In development web, use relative paths (Vite proxy handles it)
+// In Capacitor or production, use the full API URL
+const API_BASE = (import.meta.env.DEV && !isCapacitor) 
+  ? '' 
+  : (import.meta.env.VITE_API_URL || 'https://stream.noxamusic.com');
+
+// Debug: Log the API base on startup
+if (typeof window !== 'undefined') {
+  console.log('🌐 API Client initialized:', { 
+    API_BASE, 
+    isCapacitor, 
+    isDev: import.meta.env.DEV,
+    protocol: window.location.protocol 
+  });
+}
 
 export interface ApiError {
   message: string;
@@ -29,10 +47,17 @@ export async function api<T = unknown>(
     ...options.headers,
   };
   
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const url = `${API_BASE}${endpoint}`;
+  console.log(`📡 API ${options.method || 'GET'}: ${url}`);
+  
+  const response = await fetch(url, {
     ...options,
     headers,
   });
+  
+  // Check if response is JSON
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
   
   if (!response.ok) {
     const error: ApiError = {
@@ -40,20 +65,31 @@ export async function api<T = unknown>(
       status: response.status,
     };
     
-    try {
-      const data = await response.json();
-      error.message = data.message || data.error || error.message;
-    } catch {
-      // Ignore JSON parse errors
+    if (isJson) {
+      try {
+        const data = await response.json();
+        error.message = data.message || data.error || error.message;
+      } catch {
+        // Ignore JSON parse errors
+      }
+    } else {
+      // Response is HTML - likely a server error or wrong URL
+      error.message = `Server returned HTML instead of JSON. Check if the API URL is correct: ${url}`;
+      console.error('❌ API returned HTML instead of JSON:', url);
     }
     
     throw error;
   }
   
-  // Check if response is JSON
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
+  if (isJson) {
     return response.json();
+  }
+  
+  // If not JSON but status is OK, it might be HTML error
+  const text = await response.text();
+  if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+    console.error('❌ Expected JSON but got HTML:', text.substring(0, 200));
+    throw { message: 'Server returned HTML instead of JSON', status: 500 } as ApiError;
   }
   
   return response as unknown as T;
