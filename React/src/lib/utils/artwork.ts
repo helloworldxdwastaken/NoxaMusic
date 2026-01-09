@@ -10,16 +10,31 @@ const API_BASE = (import.meta.env.DEV && !isCapacitor)
   ? '' 
   : (import.meta.env.VITE_API_URL || 'https://stream.noxamusic.com');
 
-// Local fallback images - use bundled assets in Capacitor, relative paths on web
-const LOCAL_DEFAULT_ARTWORK = './images/default-artwork.jpg';
-const LOCAL_DEFAULT_ARTIST = './images/default-artist.jpg';
+// Debug artwork loading
+if (typeof window !== 'undefined') {
+  console.log('🖼️ Artwork utility initialized:', { isCapacitor, API_BASE });
+}
+
+// Local fallback images - always use full path for reliability
+const getDefaultArtworkPath = () => {
+  // In Capacitor, use relative path from www folder
+  // On web, use relative path from public folder
+  return './images/default-artwork.jpg';
+};
+
+const getDefaultArtistPath = () => {
+  return './images/default-artist.jpg';
+};
 
 /**
  * Get the full URL for artwork
  */
 export function getArtworkUrl(path: string | null | undefined): string {
   // Use local default if no path
-  if (!path) return LOCAL_DEFAULT_ARTWORK;
+  if (!path) {
+    console.log('🖼️ No artwork path, using default');
+    return getDefaultArtworkPath();
+  }
   
   // Normalize server filesystem paths to web-accessible paths
   let normalizedPath = path;
@@ -37,7 +52,9 @@ export function getArtworkUrl(path: string | null | undefined): string {
   }
   
   // Relative path - prepend API base
-  return `${API_BASE}${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
+  const finalUrl = `${API_BASE}${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
+  console.log('🖼️ Artwork URL:', { original: path, normalized: normalizedPath, final: finalUrl });
+  return finalUrl;
 }
 
 /**
@@ -55,7 +72,7 @@ export function getAlbumCoverUrl(cover: string | null | undefined, artist?: stri
     return getArtworkUrl(path);
   }
   
-  return LOCAL_DEFAULT_ARTWORK;
+  return getDefaultArtworkPath();
 }
 
 /**
@@ -63,7 +80,7 @@ export function getAlbumCoverUrl(cover: string | null | undefined, artist?: stri
  */
 export function getArtistImageUrl(path: string | null | undefined): string {
   // Use local default if no path
-  if (!path) return LOCAL_DEFAULT_ARTIST;
+  if (!path) return getDefaultArtistPath();
   
   // Normalize server filesystem paths to web-accessible paths
   let normalizedPath = path;
@@ -88,14 +105,14 @@ export function getArtistImageUrl(path: string | null | undefined): string {
  * Get default artwork URL (local)
  */
 export function getDefaultArtwork(): string {
-  return LOCAL_DEFAULT_ARTWORK;
+  return getDefaultArtworkPath();
 }
 
 /**
  * Get default artist image URL (local)
  */
 export function getDefaultArtistImage(): string {
-  return LOCAL_DEFAULT_ARTIST;
+  return getDefaultArtistPath();
 }
 
 /**
