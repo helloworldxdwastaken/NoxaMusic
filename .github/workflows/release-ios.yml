@@ -64,6 +64,12 @@ jobs:
           cd mobile
           npx cap sync ios
 
+      - name: Generate 1024x1024 app icon for iOS
+        run: |
+          cd mobile/ios/App/App/Assets.xcassets/AppIcon.appiconset
+          # Use sips (built into macOS) to resize icon to 1024x1024
+          sips -z 1024 1024 ../../../../../../../React/public/icons/icon-512x512.png --out AppIcon-512@2x.png
+
       - name: Install CocoaPods dependencies
         run: |
           cd mobile/ios/App
