@@ -26,7 +26,17 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading state - will be replaced by React -->
+      <div id="loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0a;color:#fff;font-family:system-ui;">
+        <div style="font-size:24px;font-weight:700;margin-bottom:16px;">Noxa Music</div>
+        <div style="color:#888;">Loading...</div>
+      </div>
+    </div>
+    <script>
+      // Debug: This should always run
+      console.log('📱 HTML loaded, checking if JS bundles exist...');
+    </script>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
