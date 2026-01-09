@@ -70,14 +70,28 @@ export const NowPlaying: React.FC = () => {
       }
     };
 
+    const handleError = (e: Event) => {
+      const audioEl = e.target as HTMLAudioElement;
+      console.error('❌ Mobile Audio error event:', {
+        error: audioEl.error,
+        errorCode: audioEl.error?.code,
+        errorMessage: audioEl.error?.message,
+        src: audioEl.src,
+        networkState: audioEl.networkState,
+        readyState: audioEl.readyState,
+      });
+    };
+
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, [isMobile, setCurrentTime, setDuration]);
 

@@ -135,8 +135,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     });
     
     if (audioRef) {
-      audioRef.src = getStreamUrl(track.id);
-      audioRef.play().catch(console.error);
+      const streamUrl = getStreamUrl(track.id);
+      console.log('🎵 Playing track:', { id: track.id, title: track.title, streamUrl });
+      audioRef.src = streamUrl;
+      audioRef.play().catch((err) => {
+        console.error('❌ Audio play error:', err);
+        console.error('❌ Stream URL was:', streamUrl);
+      });
       set({ isPlaying: true });
     }
     
