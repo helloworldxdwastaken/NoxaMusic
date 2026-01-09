@@ -66,9 +66,11 @@ jobs:
 
       - name: Generate 1024x1024 app icon for iOS
         run: |
-          cd mobile/ios/App/App/Assets.xcassets/AppIcon.appiconset
-          # Use sips (built into macOS) to resize icon to 1024x1024
-          sips -z 1024 1024 ../../../../../../../React/public/icons/icon-512x512.png --out AppIcon-512@2x.png
+          # Create 1024x1024 icon from 512x512 source
+          sips -z 1024 1024 React/public/icons/icon-512x512.png --out mobile/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+          # Verify the icon was created
+          ls -la mobile/ios/App/App/Assets.xcassets/AppIcon.appiconset/
+          file mobile/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
 
       - name: Install CocoaPods dependencies
         run: |
