@@ -12,17 +12,39 @@ export const SettingsDropdown: React.FC = () => {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        if (isSettingsOpen) toggleSettings();
+    if (!isSettingsOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      
+      // Check if click is inside dropdown
+      if (dropdownRef.current?.contains(target)) {
+        return;
       }
+      
+      // Check if click is on the toggle button (has user-btn or user-avatar class)
+      const targetElement = target as HTMLElement;
+      if (
+        targetElement.closest?.('.user-btn') ||
+        targetElement.closest?.('.settings-trigger')
+      ) {
+        return; // Let the button handle the toggle
+      }
+      
+      toggleSettings();
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    // Use a small delay to prevent immediate close on open
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [isSettingsOpen, toggleSettings]);
 
   const handleLogout = () => {

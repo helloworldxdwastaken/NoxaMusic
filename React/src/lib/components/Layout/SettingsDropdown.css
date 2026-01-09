@@ -109,10 +109,15 @@
   .settings-dropdown {
     position: fixed;
     top: auto;
-    bottom: calc(var(--mobile-nav-height) + 80px);
-    right: 8px;
-    left: 8px;
+    bottom: calc(var(--mobile-nav-height, 60px) + 16px);
+    right: 16px;
+    left: auto;
+    min-width: 280px;
+    max-width: calc(100vw - 32px);
     margin-top: 0;
+    transform-origin: bottom right;
+    max-height: calc(100vh - var(--mobile-nav-height, 60px) - 100px);
+    overflow-y: auto;
   }
 }
 
