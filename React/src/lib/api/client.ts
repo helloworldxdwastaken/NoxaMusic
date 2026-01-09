@@ -140,8 +140,7 @@ export async function del<T = unknown>(endpoint: string): Promise<T> {
  */
 export function getStreamUrl(trackId: number): string {
   const token = getAuthToken();
-  const base = import.meta.env.DEV ? '' : API_BASE;
-  return `${base}/api/library/stream/${trackId}${token ? `?token=${token}` : ''}`;
+  return `${API_BASE}/api/library/stream/${trackId}${token ? `?token=${token}` : ''}`;
 }
 
 /**

@@ -1,10 +1,18 @@
-// In development, we use relative paths and let Vite proxy handle it
-// In production, use the full API URL
-const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'https://stream.noxamusic.com');
+// Detect if running in Capacitor
+const isCapacitor = typeof window !== 'undefined' && 
+  (window.location.protocol === 'file:' || 
+   window.location.protocol === 'capacitor:' ||
+   !!(window as any).Capacitor);
 
-// Local fallback images (in public folder)
-const LOCAL_DEFAULT_ARTWORK = '/images/default-artwork.jpg';
-const LOCAL_DEFAULT_ARTIST = '/images/default-artist.jpg';
+// In development web, use relative paths (Vite proxy handles it)
+// In Capacitor or production, use the full API URL
+const API_BASE = (import.meta.env.DEV && !isCapacitor) 
+  ? '' 
+  : (import.meta.env.VITE_API_URL || 'https://stream.noxamusic.com');
+
+// Local fallback images - use bundled assets in Capacitor, relative paths on web
+const LOCAL_DEFAULT_ARTWORK = './images/default-artwork.jpg';
+const LOCAL_DEFAULT_ARTIST = './images/default-artist.jpg';
 
 /**
  * Get the full URL for artwork

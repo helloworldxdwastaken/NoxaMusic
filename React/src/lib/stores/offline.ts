@@ -231,7 +231,10 @@ function removeAudioFromServiceWorker(url: string) {
 
 // Get stream URL for a track
 function getStreamUrl(trackId: number): string {
-  const baseUrl = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '');
+  // Use full API URL in Capacitor or production
+  const baseUrl = (import.meta.env.DEV && !isCapacitor) 
+    ? '' 
+    : (import.meta.env.VITE_API_URL || 'https://stream.noxamusic.com');
   const token = localStorage.getItem('musicstream_token');
   return `${baseUrl}/api/library/stream/${trackId}${token ? `?token=${token}` : ''}`;
 }
