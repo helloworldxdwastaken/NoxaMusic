@@ -105,7 +105,11 @@ export const ArtistDetail: React.FC = () => {
               <div className="artist-image-container">
                 <img
                   className="artist-image"
-                  src={getArtistImageUrl(data.tracks[0]?.artist_image)}
+                  src={getArtistImageUrl(
+                    data.tracks[0]?.artist_image || 
+                    data.albums[0]?.album_cover || 
+                    data.tracks[0]?.album_cover
+                  )}
                   alt={data.artist}
                   onError={(e) => handleImageError(e, 'artist')}
                 />
