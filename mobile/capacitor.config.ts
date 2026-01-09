@@ -1,13 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// Set to true for development (loads from live server)
-// Set to false for production (loads bundled assets from www/)
-const isDev = true;
-
-// Your development server URL - change this to your machine's IP
-const DEV_SERVER_URL = 'http://192.168.1.100:5173';
-
-const baseConfig: CapacitorConfig = {
+// Production config - loads bundled assets from www/
+// For local development, create capacitor.config.json with server.url pointing to your dev server
+const config: CapacitorConfig = {
   appId: 'com.noxamusic.app',
   appName: 'Noxa Music',
   webDir: 'www',
@@ -21,8 +16,7 @@ const baseConfig: CapacitorConfig = {
   
   android: {
     allowMixedContent: true,
-    backgroundColor: '#0a0a0a',
-    webContentsDebuggingEnabled: isDev
+    backgroundColor: '#0a0a0a'
   },
   
   ios: {
@@ -31,12 +25,4 @@ const baseConfig: CapacitorConfig = {
   }
 };
 
-// Add live server for development
-if (isDev) {
-  baseConfig.server = {
-    url: DEV_SERVER_URL,
-    cleartext: true
-  };
-}
-
-export default baseConfig;
+export default config;
