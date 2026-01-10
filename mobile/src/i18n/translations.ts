@@ -86,10 +86,14 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
         online: 'Online',
       },
       types: {
+        all: 'All',
         track: 'Songs',
         artist: 'Artists',
         album: 'Albums',
       },
+      inLibrary: 'In Library',
+      downloadAll: 'Download All',
+      loadFailed: 'Failed to load details',
     },
     settings: {
       serverTitle: 'Server',
@@ -261,10 +265,14 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
         online: 'En línea',
       },
       types: {
+        all: 'Todo',
         track: 'Canciones',
         artist: 'Artistas',
         album: 'Álbumes',
       },
+      inLibrary: 'En biblioteca',
+      downloadAll: 'Descargar todo',
+      loadFailed: 'Error al cargar detalles',
     },
     settings: {
       serverTitle: 'Servidor',

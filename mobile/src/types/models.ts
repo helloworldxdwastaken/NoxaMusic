@@ -125,6 +125,41 @@ export interface RemoteTrack {
   type?: string | null;
 }
 
+export interface RemoteArtist {
+  id: string;
+  name: string;
+  image?: string | null;
+  fans?: number | null;
+  source?: string | null;
+}
+
+export interface RemoteAlbum {
+  id: string;
+  title: string;
+  artistName: string;
+  artistId?: string | null;
+  image?: string | null;
+  trackCount?: number | null;
+  releaseDate?: string | null;
+  type?: string | null; // album, single, ep
+  source?: string | null;
+}
+
+export interface RemoteArtistDetail extends RemoteArtist {
+  albums: RemoteAlbum[];
+}
+
+export interface RemoteAlbumDetail extends RemoteAlbum {
+  tracks: RemoteTrack[];
+  duration?: number | null;
+}
+
+export interface SmartSearchResult {
+  tracks: RemoteTrack[];
+  artists: RemoteArtist[];
+  albums: RemoteAlbum[];
+}
+
 export interface RemoteSearchResponse {
   success?: boolean;
   data?: RemoteTrack[];

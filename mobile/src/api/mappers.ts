@@ -3,8 +3,13 @@ import type {
   LibraryStats,
   Playlist,
   PlaylistTrackItem,
+  RemoteAlbum,
+  RemoteAlbumDetail,
+  RemoteArtist,
+  RemoteArtistDetail,
   RemoteSearchResponse,
   RemoteTrack,
+  SmartSearchResult,
   Song,
   User,
 } from '../types/models';
@@ -227,3 +232,40 @@ export const mapRemoteSearchResponse = (raw: RemoteSearchResponse): RemoteTrack[
   const list = data ?? items ?? results ?? tracks ?? [];
   return list.map(mapRemoteTrack);
 };
+
+export const mapRemoteArtist = (raw: any): RemoteArtist => ({
+  id: String(raw?.id ?? ''),
+  name: normalizeString(raw?.name) ?? normalizeString(raw?.title) ?? 'Unknown Artist',
+  image: normalizeString(raw?.image) ?? normalizeString(raw?.picture) ?? normalizeString(raw?.picture_medium) ?? undefined,
+  fans: normalizeNumber(raw?.fans) ?? normalizeNumber(raw?.nb_fan) ?? undefined,
+  source: normalizeString(raw?.source) ?? 'deezer',
+});
+
+export const mapRemoteAlbum = (raw: any): RemoteAlbum => ({
+  id: String(raw?.id ?? ''),
+  title: normalizeString(raw?.title) ?? normalizeString(raw?.name) ?? 'Unknown Album',
+  artistName: normalizeString(raw?.artist) ?? normalizeString(raw?.artistName) ?? normalizeString(raw?.artist_name) ?? '',
+  artistId: raw?.artistId ? String(raw.artistId) : raw?.artist_id ? String(raw.artist_id) : undefined,
+  image: normalizeString(raw?.image) ?? normalizeString(raw?.cover) ?? normalizeString(raw?.cover_medium) ?? undefined,
+  trackCount: normalizeNumber(raw?.trackCount) ?? normalizeNumber(raw?.track_count) ?? normalizeNumber(raw?.nb_tracks) ?? undefined,
+  releaseDate: normalizeString(raw?.releaseDate) ?? normalizeString(raw?.release_date) ?? undefined,
+  type: normalizeString(raw?.type) ?? normalizeString(raw?.record_type) ?? undefined,
+  source: normalizeString(raw?.source) ?? 'deezer',
+});
+
+export const mapSmartSearchResult = (raw: any): SmartSearchResult => ({
+  tracks: Array.isArray(raw?.tracks) ? raw.tracks.map(mapRemoteTrack) : [],
+  artists: Array.isArray(raw?.artists) ? raw.artists.map(mapRemoteArtist) : [],
+  albums: Array.isArray(raw?.albums) ? raw.albums.map(mapRemoteAlbum) : [],
+});
+
+export const mapRemoteArtistDetail = (raw: any): RemoteArtistDetail => ({
+  ...mapRemoteArtist(raw),
+  albums: Array.isArray(raw?.albums) ? raw.albums.map(mapRemoteAlbum) : [],
+});
+
+export const mapRemoteAlbumDetail = (raw: any): RemoteAlbumDetail => ({
+  ...mapRemoteAlbum(raw),
+  tracks: Array.isArray(raw?.tracks) ? raw.tracks.map(mapRemoteTrack) : [],
+  duration: normalizeNumber(raw?.duration) ?? undefined,
+});

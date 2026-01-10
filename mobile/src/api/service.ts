@@ -19,8 +19,11 @@ import {
   mapPlaylist,
   mapPlaylists,
   mapPlaylistTracks,
+  mapRemoteAlbumDetail,
+  mapRemoteArtistDetail,
   mapRemoteSearchResponse,
   mapRemoteTrack,
+  mapSmartSearchResult,
   mapSongs,
 } from './mappers';
 import type {
@@ -29,7 +32,12 @@ import type {
   DownloadItem,
   LibraryStats,
   Playlist,
+  RemoteAlbum,
+  RemoteAlbumDetail,
+  RemoteArtist,
+  RemoteArtistDetail,
   RemoteTrack,
+  SmartSearchResult,
   Song,
   User,
 } from '../types/models';
@@ -173,6 +181,51 @@ export const searchOnlineTracks = async (
     return mapRemoteSearchResponse(data);
   } catch (error) {
     return handleAxiosError(error, 'Unable to search online catalog.');
+  }
+};
+
+// Smart search - returns tracks, artists, albums at once
+export const smartSearchOnline = async (query: string): Promise<SmartSearchResult> => {
+  try {
+    const response = await apiClient.get('/api/music/smart-search', {
+      params: { q: query, limit: 10 },
+    });
+    return mapSmartSearchResult(response.data);
+  } catch (error) {
+    return handleAxiosError(error, 'Unable to search online catalog.');
+  }
+};
+
+// Get online artist detail with albums
+export const fetchOnlineArtist = async (artistId: string): Promise<RemoteArtistDetail> => {
+  try {
+    const response = await apiClient.get(`/api/music/artist/${artistId}`);
+    return mapRemoteArtistDetail(response.data);
+  } catch (error) {
+    return handleAxiosError(error, 'Unable to load artist details.');
+  }
+};
+
+// Get online album detail with tracks
+export const fetchOnlineAlbum = async (albumId: string): Promise<RemoteAlbumDetail> => {
+  try {
+    const response = await apiClient.get(`/api/music/album/${albumId}`);
+    return mapRemoteAlbumDetail(response.data);
+  } catch (error) {
+    return handleAxiosError(error, 'Unable to load album details.');
+  }
+};
+
+// Check if tracks/albums already exist in local library
+export const checkExistsInLibrary = async (
+  tracks: Array<{ id: string; title: string; artist: string }>,
+  albums: Array<{ id: string; title: string; artist: string }>,
+): Promise<{ tracks: Record<string, boolean>; albums: Record<string, boolean> }> => {
+  try {
+    const response = await apiClient.post('/api/library/check-exists', { tracks, albums });
+    return response.data;
+  } catch {
+    return { tracks: {}, albums: {} };
   }
 };
 
