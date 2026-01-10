@@ -1,0 +1,61 @@
+name: Release iOS
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-ios:
+    name: Release iOS
+    runs-on: macos-15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.4'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+
+      - name: Build iOS Archive
+        run: |
+          cd ios
+          xcodebuild -workspace music_app.xcworkspace \
+            -scheme music_app \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath $PWD/build/music_app.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export unsigned IPA
+        run: |
+          cd ios
+          mkdir -p build/Payload
+          cp -r build/music_app.xcarchive/Products/Applications/music_app.app build/Payload/
+          cd build
+          zip -r music_app-unsigned.ipa Payload
+
+      - name: Upload iOS IPA to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ios/build/music_app-unsigned.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+

@@ -1,0 +1,149 @@
+name: Android Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & TypeCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.4'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript compiler
+        run: npx tsc --noEmit
+
+      - name: Run ESLint
+        run: npx eslint src --ext .ts,.tsx
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.4'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pre-download dependencies
+        run: |
+          cd android
+          # Try to resolve dependencies first, retry if needed
+          for i in 1 2 3; do
+            echo "Dependency resolution attempt $i..."
+            if ./gradlew dependencies --no-daemon 2>/dev/null; then
+              echo "Dependencies resolved on attempt $i"
+              break
+            fi
+            if [ $i -lt 3 ]; then
+              echo "Dependency resolution failed, cleaning caches..."
+              rm -rf ~/.gradle/caches/modules-2/files-2.1/com.google.code.gson || true
+              sleep 30
+            fi
+          done
+
+      - name: Build Android APK
+        run: |
+          set -o pipefail
+          rm -f android-build.log
+          cd android
+          # Retry logic for transient Maven Central 403 errors
+          for i in 1 2 3 4 5; do
+            echo "Build attempt $i..."
+            if ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee ../android-build.log; then
+              echo "Build succeeded on attempt $i"
+              break
+            fi
+            if [ $i -lt 5 ]; then
+              echo "Build failed, waiting 90s before retry..."
+              ./gradlew --stop || true
+              # Clean Gradle caches that might be corrupted
+              rm -rf ~/.gradle/caches/modules-2/files-2.1/com.google.code.gson || true
+              rm -rf .gradle/caches || true
+              sleep 90
+            else
+              echo "Build failed after 5 attempts"
+              exit 1
+            fi
+          done
+
+      - name: List build outputs
+        if: success()
+        run: |
+          echo "Contents of android/app/build/outputs:"
+          if [ -d android/app/build/outputs ]; then
+            find android/app/build/outputs -maxdepth 4 -type f -print
+          else
+            echo "No build outputs directory found."
+          fi
+
+      - name: Upload Android APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-apk
+          path: |
+            android/app/build/outputs/apk/**/*.apk
+            android/app/build/outputs/bundle/**/*.aab
+          retention-days: 30
+
+      - name: Upload CMake logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cmake-build-logs
+          path: android/app/.cxx/**/cmake_build_output.txt
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: List CMake logs on failure
+        if: failure()
+        run: |
+          echo "Available cmake_build_output.txt files:"
+          find android/app -name 'cmake_build_output.txt' -print || true
+
+      - name: Show Gradle build log info on failure
+        if: failure()
+        run: |
+          ls -l android-build.log || true
+
+      - name: Upload Gradle build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: android-build.log
+          if-no-files-found: ignore
+          retention-days: 7

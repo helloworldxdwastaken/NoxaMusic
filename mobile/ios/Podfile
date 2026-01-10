@@ -1,0 +1,70 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, '15.1'
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'music_app' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      # :ccache_enabled => true
+    )
+    
+    # Patch Folly to avoid missing coroutine headers (RN 0.82 issue)
+    folly_dir = File.join(__dir__, 'Pods', 'RCT-Folly', 'folly')
+    if Dir.exist?(folly_dir)
+      # Patch Expected.h
+      expected_file = File.join(folly_dir, 'Expected.h')
+      if File.exist?(expected_file)
+        content = File.read(expected_file)
+        if content.include?('folly/coro/Coroutine.h')
+          content.gsub!('#include <folly/coro/Coroutine.h>', '// Patched: coroutine header not available in RN 0.82')
+          File.write(expected_file, content)
+          puts "✅ Patched Expected.h"
+        end
+      end
+      
+      # Patch any other files that try to include coro headers
+      Dir.glob(File.join(folly_dir, '**', '*.h')).each do |header|
+        content = File.read(header)
+        if content.include?('folly/coro/')
+          original = content.dup
+          content.gsub!(/#include\s+[<"]folly\/coro\/[^>"]+[>"]/, '// Patched: coro header removed')
+          if content != original
+            File.write(header, content)
+            puts "✅ Patched #{File.basename(header)}"
+          end
+        end
+      end
+    end
+    
+    # Fix for RCT-Folly and New Architecture compatibility
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+        config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
+      end
+    end
+  end
+end

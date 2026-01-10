@@ -1,0 +1,15 @@
+pluginManagement {
+    includeBuild("../node_modules/@react-native/gradle-plugin")
+    repositories {
+        google()
+        // Use repo1 mirror directly (same content as mavenCentral but different URL/rate limits)
+        maven { url = uri("https://repo1.maven.org/maven2") }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+plugins { id("com.facebook.react.settings") }
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+rootProject.name = 'music_app'
+include ':app'
+includeBuild('../node_modules/@react-native/gradle-plugin')

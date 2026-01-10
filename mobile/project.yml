@@ -1,0 +1,53 @@
+name: MusicApp
+
+options:
+  bundleIdPrefix: com.noxamusic
+  deploymentTarget:
+    iOS: 15.1
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: "" # Replace with your Apple Developer Team ID
+    CODE_SIGN_IDENTITY: "Apple Development"
+    IPHONEOS_DEPLOYMENT_TARGET: 15.0
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SUPPORTED_PLATFORMS: "iphonesimulator iphoneos"
+    SDKROOT: iphoneos
+
+targets:
+  music_app:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.1"
+    sources:
+      - path: ios/music_app
+    settings:
+      base:
+        PRODUCT_NAME: "Noxa Music"
+        PRODUCT_BUNDLE_IDENTIFIER: com.noxamusic.app
+        INFOPLIST_FILE: ios/music_app/Info.plist
+        SWIFT_VERSION: "5.0"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+        ASSETCATALOG_COMPILER_INCLUDE_SIMULATOR_ASSETS: NO
+        IPHONEOS_DEPLOYMENT_TARGET: 15.1
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE: NO
+        CLANG_ENABLE_MODULES: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
+        DEVELOPMENT_TEAM: "" # Replace with your Apple Developer Team ID
+    info:
+      path: ios/music_app/Info.plist
+      properties:
+        CFBundleDisplayName: Noxa Music
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        UILaunchStoryboardName: LaunchScreen
+        LSRequiresIPhoneOS: true
+        UIBackgroundModes:
+          - audio
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+

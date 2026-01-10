@@ -1,0 +1,80 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.4'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+
+      - name: Build iOS app
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild -workspace music_app.xcworkspace \
+            -scheme music_app \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath $PWD/build/music_app.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -allowProvisioningUpdates \
+            2>&1 | tee build.log | grep -E "error:|warning:|note:|===|Compiling|Linking|Building"
+
+      - name: Check if archive exists
+        run: |
+          if [ -d "ios/build/music_app.xcarchive" ]; then
+            echo "✅ Archive created successfully"
+            ls -la ios/build/music_app.xcarchive/Products/Applications/ || true
+          else
+            echo "❌ Archive not found"
+            exit 1
+          fi
+
+      - name: Export unsigned IPA
+        run: |
+          cd ios
+          mkdir -p build/Payload
+          APP_PATH=$(find build/music_app.xcarchive/Products/Applications -maxdepth 1 -type d -name "*.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ No .app bundle found inside the archive"
+            ls -la build/music_app.xcarchive/Products/Applications || true
+            exit 1
+          fi
+          echo "📦 Found app bundle: $APP_PATH"
+          cp -r "$APP_PATH" build/Payload/
+          cd build
+          zip -r music_app-unsigned.ipa Payload
+          ls -lh music_app-unsigned.ipa
+          
+      - name: Upload iOS IPA (Unsigned)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: ios/build/music_app-unsigned.ipa
+          retention-days: 30
+
