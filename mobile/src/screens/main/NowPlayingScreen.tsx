@@ -76,6 +76,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [progressBarWidth, setProgressBarWidth] = useState(0);
   const [lyricsVisible, setLyricsVisible] = useState(false);
+  const [queueVisible, setQueueVisible] = useState(false);
   const [syncedLyrics, setSyncedLyrics] = useState<ParsedLyricLine[]>([]);
   const [plainLyrics, setPlainLyrics] = useState<string[]>([]);
   const [lyricsLoading, setLyricsLoading] = useState(false);
@@ -474,7 +475,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
               track ? (
                 <ArtworkImage
                   uri={track.artwork ?? undefined}
-                  size={300}
+                  size={280}
                   fallbackLabel={track.title?.[0]?.toUpperCase()}
                 />
               ) : (
@@ -550,22 +551,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.trackInfo}>
-          <View style={styles.trackTitleRow}>
-            <Text style={styles.trackTitle} numberOfLines={2}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
-            {/* Lyrics toggle button - next to song title */}
-            <TouchableOpacity
-              style={[styles.lyricsButton, lyricsVisible && styles.lyricsButtonActive]}
-              onPress={handleLyricsToggle}
-            >
-              <Icon name="quote" size={16} color={lyricsVisible ? primary : 'rgba(255,255,255,0.6)'} />
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.trackTitle} numberOfLines={2}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
           <TouchableOpacity onPress={handleArtistPress} disabled={!track?.artist}>
             <Text style={[styles.trackArtist, track?.artist && styles.trackArtistTappable]}>
               {track?.artist ?? t('nowPlaying.placeholderArtist')}
             </Text>
           </TouchableOpacity>
-          {track?.album ? <Text style={styles.trackAlbum}>{track.album}</Text> : null}
         </View>
 
         <View style={styles.progressSection}>
@@ -624,45 +615,92 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.queueSection}>
-          <Text style={styles.queueTitle}>{t('nowPlaying.upNext')}</Text>
-          {queue.length === 0 ? (
-            <Text style={styles.emptyQueue}>{t('nowPlaying.queueEmpty')}</Text>
-          ) : (
-            queue.map((item, index) => {
-              const isActive = index === activeIndex;
-              return (
-                <TouchableOpacity
-                  key={`${item.id}-${index}`}
-                  style={styles.queueItem}
-                  onPress={() => handleSelectTrack(item)}
-                  disabled={isActive}
-                >
-                  <View style={[styles.queueArtwork, isActive && [styles.queueArtworkActive, { borderColor: primary }]]}>
-                    <ArtworkImage
-                      uri={typeof item.artwork === 'string' ? item.artwork : null}
-                      size={42}
-                      fallbackLabel={item.title?.[0]?.toUpperCase()}
-                    />
-                  </View>
-                  <View style={styles.queueInfo}>
-                    <Text
-                      style={[styles.queueSongTitle, isActive && [{ color: primary }, styles.queueSongTitleActive]]}
-                      numberOfLines={1}
-                    >
-                      {item.title}
-                    </Text>
-                    <Text style={styles.queueSongArtist} numberOfLines={1}>
-                      {item.artist}
-                    </Text>
-                  </View>
-                  {isActive ? <Text style={[styles.queueNow, { color: primary, borderColor: primary }]}>NOW</Text> : null}
-                </TouchableOpacity>
-              );
-            })
-          )}
+        {/* Action bar - matching web design */}
+        <View style={styles.actionsBar}>
+          <TouchableOpacity style={styles.actionBtn} onPress={handleLyricsToggle}>
+            <Icon name="quote" size={18} color={lyricsVisible ? primary : '#b3b3b3'} />
+            <Text style={[styles.actionBtnText, lyricsVisible && { color: primary }]}>Lyrics</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.actionBtn} 
+            onPress={() => {
+              if (playlists.length === 0 && !loadingPlaylists) {
+                loadPlaylists();
+              }
+              setPlaylistPickerVisible(true);
+            }}
+          >
+            <Icon name="plus" size={18} color="#b3b3b3" />
+            <Text style={styles.actionBtnText}>Add to Playlist</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => setQueueVisible(true)}>
+            <Icon name="list" size={18} color="#b3b3b3" />
+            <Text style={styles.actionBtnText}>Queue</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Queue Modal */}
+      <Modal
+        transparent
+        visible={queueVisible}
+        animationType="slide"
+        onRequestClose={() => setQueueVisible(false)}
+      >
+        <View style={styles.queueModalOverlay}>
+          <Pressable style={styles.queueModalBackdrop} onPress={() => setQueueVisible(false)} />
+          <View style={[styles.queueModalContainer, { paddingBottom: insets.bottom + 16 }]}>
+            <View style={styles.queueModalHeader}>
+              <Text style={styles.queueModalTitle}>{t('nowPlaying.upNext')}</Text>
+              <TouchableOpacity onPress={() => setQueueVisible(false)} style={styles.queueCloseBtn}>
+                <Icon name="x" size={24} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+            {queue.length === 0 ? (
+              <Text style={styles.emptyQueue}>{t('nowPlaying.queueEmpty')}</Text>
+            ) : (
+              <FlatList
+                data={queue}
+                keyExtractor={(item, index) => `${item.id}-${index}`}
+                style={styles.queueList}
+                renderItem={({ item, index }) => {
+                  const isActive = index === activeIndex;
+                  return (
+                    <TouchableOpacity
+                      style={styles.queueItem}
+                      onPress={() => {
+                        handleSelectTrack(item);
+                        setQueueVisible(false);
+                      }}
+                      disabled={isActive}
+                    >
+                      <View style={[styles.queueArtwork, isActive && [styles.queueArtworkActive, { borderColor: primary }]]}>
+                        <ArtworkImage
+                          uri={typeof item.artwork === 'string' ? item.artwork : null}
+                          size={42}
+                          fallbackLabel={item.title?.[0]?.toUpperCase()}
+                        />
+                      </View>
+                      <View style={styles.queueInfo}>
+                        <Text
+                          style={[styles.queueSongTitle, isActive && [{ color: primary }, styles.queueSongTitleActive]]}
+                          numberOfLines={1}
+                        >
+                          {item.title}
+                        </Text>
+                        <Text style={styles.queueSongArtist} numberOfLines={1}>
+                          {item.artist}
+                        </Text>
+                      </View>
+                      {isActive ? <Text style={[styles.queueNow, { color: primary, borderColor: primary }]}>NOW</Text> : null}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         transparent
@@ -794,38 +832,27 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
-    padding: 24,
-    gap: 32,
-    paddingBottom: 120,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 60,
+    gap: 16,
   },
   artworkContainer: {
     alignItems: 'center',
     position: 'relative',
   },
   artworkWrapper: {
-    width: 320,
-    height: 320,
-    borderRadius: 32,
+    width: 280,
+    height: 280,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     // No overflow:hidden - allows shadow/glow to show
   },
-  lyricsButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  lyricsButtonActive: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
   // Lyrics view - replaces artwork, no background
   lyricsOverlay: {
-    width: 300,
-    height: 300,
+    width: 280,
+    height: 280,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
@@ -889,8 +916,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 18 },
   },
   placeholderArtwork: {
-    width: 300,
-    height: 300,
+    width: 280,
+    height: 280,
     borderRadius: 24,
     backgroundColor: '#1b1b1b',
     justifyContent: 'center',
@@ -898,20 +925,15 @@ const styles = StyleSheet.create({
   },
   trackInfo: {
     alignItems: 'center',
-    gap: 6,
-  },
-  trackTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
+    gap: 8,
+    marginVertical: 24,
   },
   trackTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#ffffff',
     textAlign: 'center',
-    flexShrink: 1,
+    paddingHorizontal: 16,
   },
   trackArtist: {
     fontSize: 16,
@@ -949,6 +971,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 24,
+  },
+  actionsBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    marginTop: 8,
+  },
+  actionBtn: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    flex: 1,
+  },
+  actionBtnText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#b3b3b3',
   },
   controlBtn: {
     width: 48,
@@ -990,13 +1036,41 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
-  queueSection: {
-    gap: 12,
+  queueModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
   },
-  queueTitle: {
+  queueModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  queueModalContainer: {
+    backgroundColor: '#0a0a0a',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    maxHeight: '70%',
+  },
+  queueModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  queueModalTitle: {
     color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  queueCloseBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  queueList: {
+    flex: 1,
   },
   queueItem: {
     flexDirection: 'row',
