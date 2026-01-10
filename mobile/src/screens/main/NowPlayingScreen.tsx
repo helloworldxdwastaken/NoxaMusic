@@ -463,7 +463,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.spacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}>
         <View style={styles.artworkContainer}>
           <Animated.View style={[styles.artworkWrapper, styles.artworkGlowBase, { shadowColor: primary }, artworkAnimatedStyle]}>
             {/* Show artwork only when lyrics are hidden */}
@@ -629,9 +629,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             <Icon name="plus" size={18} color="#b3b3b3" />
             <Text style={styles.actionBtnText}>Add to Playlist</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => setQueueVisible(true)}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => {
+            loadQueue();
+            setQueueVisible(true);
+          }}>
             <Icon name="list" size={18} color="#b3b3b3" />
-            <Text style={styles.actionBtnText}>Queue</Text>
+            <Text style={styles.actionBtnText}>Queue ({queue.length})</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -789,9 +792,10 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 24,
     paddingBottom: 60,
-    gap: 16,
+    gap: 28,
+    flexGrow: 1,
   },
   artworkContainer: {
     alignItems: 'center',
@@ -882,7 +886,8 @@ const styles = StyleSheet.create({
   trackInfo: {
     alignItems: 'center',
     gap: 8,
-    marginVertical: 24,
+    marginTop: 8,
+    marginBottom: 4,
   },
   trackTitle: {
     fontSize: 24,
@@ -927,6 +932,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 24,
+    marginTop: 8,
   },
   actionsBar: {
     flexDirection: 'row',
@@ -934,22 +940,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 8,
-    marginTop: 8,
+    marginTop: 16,
   },
   actionBtn: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     flex: 1,
   },
   actionBtnText: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
     color: '#b3b3b3',
   },
   controlBtn: {
@@ -1007,6 +1013,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     maxHeight: '70%',
+    minHeight: 200,
   },
   queueModalHeader: {
     flexDirection: 'row',
@@ -1069,6 +1076,9 @@ const styles = StyleSheet.create({
   },
   emptyQueue: {
     color: '#6b7280',
+    fontSize: 15,
+    textAlign: 'center',
+    paddingVertical: 40,
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
