@@ -1,8 +1,8 @@
 .mini-player {
   position: fixed;
-  bottom: calc(var(--mobile-nav-height) + 8px);
-  left: 12px;
-  right: 12px;
+  bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom) + 8px);
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
   height: 64px;
   display: flex;
   align-items: center;
