@@ -315,7 +315,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
   },
   tabs: {
     flexDirection: 'row',
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     alignItems: 'center',
   },
   tabLabel: {
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
     gap: 12,
     paddingHorizontal: 24,
   },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
   },
   gridRow: {
     gap: 16,

@@ -1,11 +1,11 @@
-// Spotify-like Dark Theme matching web app
+// NOXA Music - Theme matching web app exactly
 export const colors = {
-  // Backgrounds
-  bgBase: '#000000',
-  bgElevated: '#121212',
-  bgHighlight: '#1a1a1a',
-  bgPress: '#282828',
-  bgCard: '#161621',
+  // Backgrounds - matching web CSS variables
+  bgBase: '#0a0a0a',
+  bgElevated: '#1a1a1a',
+  bgHighlight: '#2a2a2a',
+  bgPress: '#333333',
+  bgCard: '#1a1a1a',
   
   // Text
   textPrimary: '#ffffff',
@@ -15,17 +15,21 @@ export const colors = {
   // Accents - Spotify Green
   accentGreen: '#1db954',
   accentGreenHover: '#1ed760',
-  accentRed: '#e22134',
+  accentRed: '#ff3b30',
+  accentBlue: '#0a84ff',
   
   // Borders
-  borderSubtle: '#282828',
+  borderSubtle: 'rgba(255, 255, 255, 0.1)',
+  borderMedium: 'rgba(255, 255, 255, 0.15)',
   
   // Status
   success: '#1db954',
-  error: '#ff6b6b',
+  error: '#ff3b30',
   warning: '#ffa500',
+  
+  // Glass effects
+  glassBackground: 'rgba(26, 26, 26, 0.8)',
+  glassElevated: 'rgba(40, 40, 40, 0.9)',
 } as const;
 
 export type ColorKey = keyof typeof colors;
-
-

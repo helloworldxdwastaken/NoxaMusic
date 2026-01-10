@@ -235,7 +235,7 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0a0a0a',
   },
   content: {
     paddingHorizontal: 20,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   trackList: {
     borderRadius: 18,
-    backgroundColor: '#101010',
+    backgroundColor: '#1a1a1a',
   },
   trackRow: {
     flexDirection: 'row',

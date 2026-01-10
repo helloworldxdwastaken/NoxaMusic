@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: '#121212',
+    backgroundColor: 'rgba(26, 26, 26, 0.8)',
   },
   menuBtn: {
     width: 40,
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: '#121212',
+    backgroundColor: 'rgba(26, 26, 26, 0.8)',
   },
   headerTitle: {
     fontSize: 16,
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 24,
-    backgroundColor: '#111111',
+    backgroundColor: 'rgba(26, 26, 26, 0.9)',
   },
   disabledControl: {
     opacity: 0.5,

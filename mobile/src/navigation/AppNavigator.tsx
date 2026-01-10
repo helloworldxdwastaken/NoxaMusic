@@ -89,7 +89,7 @@ const LibraryStackNavigator = () => (
   <LibraryStack.Navigator
     screenOptions={{
       headerStyle: {
-        backgroundColor: '#030303',
+        backgroundColor: '#0a0a0a',
       },
       headerTintColor: '#ffffff',
       headerTitleStyle: {
@@ -158,7 +158,7 @@ const AppStackNavigator = () => {
             animation: 'slide_from_right',
             headerShown: true,
             headerStyle: {
-              backgroundColor: '#030303',
+              backgroundColor: '#0a0a0a',
             },
             headerTintColor: '#ffffff',
             headerTitleStyle: {
@@ -177,7 +177,7 @@ const AppStackNavigator = () => {
             animation: 'slide_from_right',
             headerShown: true,
             headerStyle: {
-              backgroundColor: '#030303',
+              backgroundColor: '#0a0a0a',
             },
             headerTintColor: '#ffffff',
             headerTitleStyle: {
@@ -196,7 +196,7 @@ const AppStackNavigator = () => {
             animation: 'slide_from_right',
             headerShown: true,
             headerStyle: {
-              backgroundColor: '#030303',
+              backgroundColor: '#0a0a0a',
             },
             headerTintColor: '#ffffff',
             headerTitleStyle: {
@@ -225,11 +225,11 @@ const AppNavigator = () => {
     ...DarkTheme,
     colors: {
       ...DarkTheme.colors,
-      background: '#000000',
-      card: '#121212',
+      background: '#0a0a0a',
+      card: '#1a1a1a',
       primary: accentOption.colors[0],
       text: '#ffffff',
-      border: '#282828',
+      border: 'rgba(255, 255, 255, 0.1)',
       notification: accentOption.colors[0],
     },
   }), [accentOption]);

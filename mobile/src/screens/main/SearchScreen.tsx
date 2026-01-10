@@ -538,11 +538,11 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
     gap: 12,
   },
   searchInput: {
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     alignItems: 'center',
   },
   modeBtnActive: {},
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 16,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
   },
   typeChipActive: {
     backgroundColor: '#1a1a1a',

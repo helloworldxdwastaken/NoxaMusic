@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
   },
   scrollContent: {
     paddingTop: 16,
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     color: '#9090a5',
   },
   section: {
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     borderRadius: 16,
     padding: 20,
     gap: 16,
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     color: '#9090a5',
   },
   input: {
-    backgroundColor: '#282828',
+    backgroundColor: '#2a2a2a',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,

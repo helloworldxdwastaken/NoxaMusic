@@ -127,13 +127,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
   },
   card: {
-    backgroundColor: '#121212',
+    backgroundColor: 'rgba(40, 40, 40, 0.9)',
     borderRadius: 16,
     padding: 24,
     gap: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   title: {
     fontSize: 24,
@@ -145,11 +147,12 @@ const styles = StyleSheet.create({
     color: '#9090a5',
   },
   input: {
-    backgroundColor: '#282828',
+    backgroundColor: '#2a2a2a',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     color: '#ffffff',
+    fontSize: 16,
   },
   rememberRow: {
     flexDirection: 'row',
@@ -193,7 +196,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   linkText: {
-    color: '#8aa4ff',
+    color: '#1db954',
+    fontWeight: '600',
   },
 });
 

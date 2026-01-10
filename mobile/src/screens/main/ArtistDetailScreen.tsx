@@ -292,7 +292,7 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#030303',
+    backgroundColor: '#0a0a0a',
   },
   content: {
     paddingHorizontal: 20,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   albumCard: {
     width: '47%',
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     borderRadius: 18,
     padding: 12,
     gap: 8,

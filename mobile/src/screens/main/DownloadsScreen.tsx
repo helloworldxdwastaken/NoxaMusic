@@ -352,7 +352,7 @@ const DownloadRow = ({ item }: { item: DownloadItem }) => (
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
   },
   listContent: {
     paddingBottom: 80,

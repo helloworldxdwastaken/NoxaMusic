@@ -687,7 +687,7 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
   },
   headerGradient: {
     position: 'absolute',
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
     width: 320,
     height: 160,
     borderRadius: 20,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 16,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     marginRight: 16,
     overflow: 'hidden',
     position: 'relative',
@@ -862,7 +862,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     gap: 12,
     alignItems: 'center',
     position: 'relative',

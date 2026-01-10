@@ -729,7 +729,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
   },
   centered: {
     flex: 1,
@@ -757,7 +757,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
   descInput: {
     fontSize: 14,
     color: '#ffffff',
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#121212',
+    backgroundColor: '#1a1a1a',
   },
   actionContent: {
     flexDirection: 'row',

@@ -153,11 +153,11 @@ const CreatePlaylistScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
     paddingHorizontal: 24,
   },
   heroCard: {
-    backgroundColor: '#12121b',
+    backgroundColor: '#1a1a1a',
     borderRadius: 24,
     padding: 24,
     gap: 16,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   sheet: {
-    backgroundColor: '#12121b',
+    backgroundColor: '#1a1a1a',
     borderRadius: 24,
     padding: 24,
     gap: 16,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   input: {
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#2a2a2a',
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,

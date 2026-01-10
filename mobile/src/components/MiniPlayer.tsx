@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 14 },
     elevation: 12,
-    backgroundColor: 'rgba(10,10,15,0.7)',
+    backgroundColor: 'rgba(26, 26, 26, 0.9)',
   },
   blurLayer: {
     ...StyleSheet.absoluteFillObject,
