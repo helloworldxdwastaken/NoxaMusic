@@ -69,7 +69,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const progress = useProgress(250);
   const [queue, setQueue] = useState<Track[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(RepeatMode.Queue);
-  const [actionsVisible, setActionsVisible] = useState(false);
   const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
@@ -162,10 +161,10 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   useEffect(() => {
-    if ((actionsVisible || playlistPickerVisible) && playlists.length === 0 && !loadingPlaylists) {
+    if (playlistPickerVisible && playlists.length === 0 && !loadingPlaylists) {
       loadPlaylists();
     }
-  }, [actionsVisible, playlistPickerVisible, playlists.length, loadingPlaylists, loadPlaylists]);
+  }, [playlistPickerVisible, playlists.length, loadingPlaylists, loadPlaylists]);
 
   const activeIndex = useMemo(
     () => queue.findIndex(item => item.id === track?.id),
@@ -435,7 +434,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Added', 'Track added to playlist.');
       const playlistMeta = playlists.find(item => item.id === playlistId);
       autoDownloadNewTrack(playlistMeta, trackToSong(track));
-      setActionsVisible(false);
       setPlaylistPickerVisible(false);
     } catch (error) {
       Alert.alert('Failed', error instanceof Error ? error.message : 'Unable to add to playlist');
@@ -462,9 +460,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           <Icon name="chevron-down" size={24} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('nowPlaying.title')}</Text>
-        <TouchableOpacity style={styles.menuBtn} onPress={() => setActionsVisible(true)}>
-          <Icon name="more-vertical" size={22} color="#ffffff" />
-        </TouchableOpacity>
+        <View style={styles.spacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -704,38 +700,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
 
       <Modal
         transparent
-        visible={actionsVisible}
-        animationType="fade"
-        onRequestClose={() => setActionsVisible(false)}
-      >
-        <View style={styles.centeredModalOverlay}>
-          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setActionsVisible(false)} />
-          <View style={styles.centeredModalContainer}>
-            <Text style={styles.sheetTitle}>{track?.title ?? t('playlist.optionsTitle')}</Text>
-            <View style={styles.sheetSection}>
-              <TouchableOpacity
-                style={styles.sheetAction}
-                onPress={() => {
-                  if (playlists.length === 0 && !loadingPlaylists) {
-                    loadPlaylists();
-                  }
-                  setActionsVisible(false);
-                  setPlaylistPickerVisible(true);
-                }}
-              >
-                <Icon name="plus-circle" size={18} color="#ffffff" />
-                <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.sheetAction} onPress={() => setActionsVisible(false)}>
-              <Icon name="x" size={18} color="#ffffff" />
-              <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        transparent
         visible={playlistPickerVisible}
         animationType="fade"
         onRequestClose={() => setPlaylistPickerVisible(false)}
@@ -808,14 +772,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   closeBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 20,
-    backgroundColor: 'rgba(26, 26, 26, 0.8)',
-  },
-  menuBtn: {
     width: 40,
     height: 40,
     justifyContent: 'center',
@@ -1134,9 +1090,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '700',
-  },
-  sheetSection: {
-    gap: 12,
   },
   sheetAction: {
     flexDirection: 'row',
