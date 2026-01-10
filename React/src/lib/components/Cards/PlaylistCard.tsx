@@ -39,6 +39,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
           alt={playlist.name}
           onError={(e) => handleImageError(e)}
           loading="lazy"
+          crossOrigin="anonymous"
         />
         <button className="play-btn" onClick={handlePlay}>
           <i className="fas fa-play"></i>

@@ -105,6 +105,7 @@ export const FullPlayer: React.FC = () => {
                 src={getArtworkUrl(currentTrack.album_cover)}
                 alt={currentTrack.album}
                 onError={(e) => handleImageError(e)}
+                crossOrigin="anonymous"
               />
               <div className="player-info">
                 <span className="player-title truncate">{currentTrack.title}</span>

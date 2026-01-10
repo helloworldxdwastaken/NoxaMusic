@@ -55,6 +55,7 @@ export const FeaturedCard: React.FC<FeaturedCardProps> = ({
           alt={playlist.name}
           loading="lazy"
           decoding="async"
+          crossOrigin="anonymous"
           onError={(e) => handleImageError(e)}
         />
       )}

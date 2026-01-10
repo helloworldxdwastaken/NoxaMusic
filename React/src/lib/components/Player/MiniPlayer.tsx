@@ -74,6 +74,7 @@ export const MiniPlayer: React.FC = () => {
         src={getArtworkUrl(currentTrack.album_cover)}
         alt={currentTrack.album}
         onError={(e) => handleImageError(e)}
+        crossOrigin="anonymous"
       />
       
       <div className="mini-player-info">

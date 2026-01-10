@@ -112,6 +112,7 @@ export const ArtistDetail: React.FC = () => {
                   )}
                   alt={data.artist}
                   onError={(e) => handleImageError(e, 'artist')}
+                  crossOrigin="anonymous"
                 />
               </div>
               <div className="artist-info">

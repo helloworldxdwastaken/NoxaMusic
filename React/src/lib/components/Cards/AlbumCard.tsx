@@ -44,6 +44,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onClick, hideArtist
           alt={album.name}
           onError={(e) => handleImageError(e)}
           loading="lazy"
+          crossOrigin="anonymous"
         />
         <button className="play-btn" onClick={handlePlayClick}>
           <i className="fas fa-play"></i>

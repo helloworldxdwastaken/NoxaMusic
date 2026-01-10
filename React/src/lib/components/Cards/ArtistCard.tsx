@@ -28,6 +28,7 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
           alt={artist.name}
           onError={(e) => handleImageError(e, 'artist')}
           loading="lazy"
+          crossOrigin="anonymous"
         />
         <button className="play-btn">
           <i className="fas fa-play"></i>

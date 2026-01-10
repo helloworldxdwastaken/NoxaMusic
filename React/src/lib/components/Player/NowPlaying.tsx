@@ -129,6 +129,7 @@ export const NowPlaying: React.FC = () => {
                 src={getArtworkUrl(currentTrack.album_cover)}
                 alt={currentTrack.album}
                 onError={(e) => handleImageError(e)}
+                crossOrigin="anonymous"
               />
             </div>
 

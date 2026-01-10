@@ -133,6 +133,7 @@ export const AlbumDetail: React.FC = () => {
                   src={getArtworkUrl(data.album_cover)}
                   alt={data.album}
                   onError={(e) => handleImageError(e)}
+                  crossOrigin="anonymous"
                 />
               </div>
               <div className="album-info">

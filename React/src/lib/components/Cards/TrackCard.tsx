@@ -103,6 +103,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           alt={track.album}
           onError={(e) => handleImageError(e)}
           loading="lazy"
+          crossOrigin="anonymous"
         />
         {!showIndex && (
           <button className="artwork-play-btn">
