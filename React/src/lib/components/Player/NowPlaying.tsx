@@ -99,7 +99,7 @@ export const NowPlaying: React.FC = () => {
 
   return (
     <>
-      <audio ref={audioRef} />
+      <audio ref={audioRef} crossOrigin="use-credentials" />
       
       <div 
         className={`now-playing ${isNowPlayingOpen ? 'open' : ''}`}

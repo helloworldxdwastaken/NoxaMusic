@@ -88,12 +88,12 @@ export const FullPlayer: React.FC = () => {
 
   // Don't render on mobile (use NowPlaying instead)
   if (isMobile) {
-    return <audio ref={audioRef} />;
+    return <audio ref={audioRef} crossOrigin="use-credentials" />;
   }
 
   return (
     <>
-      <audio ref={audioRef} />
+      <audio ref={audioRef} crossOrigin="use-credentials" />
       
       <div className="full-player">
         {/* Track Info */}
